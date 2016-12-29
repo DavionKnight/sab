@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# Start the USBD as mass storage....
+#
+
+insmod /lib/modules/bcmdrivers/usbd/bcm_udc_dwc.ko
+modprobe g_mass_storage.ko file=/dev/ram9 removable=Y luns=1 stall=n idVendor=0x0a5c idProduct=0x2153 iSerialNumber=0x1234 iManufacturer="Broadcom" iProduct="Helix4"
+

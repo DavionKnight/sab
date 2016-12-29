@@ -1,0 +1,14 @@
+--- samba-3.0.37/source/smbd/vfs.c	2009-09-30 05:21:56.000000000 -0700
++++ samba-3.0.37-final/source/smbd/vfs.c	2014-01-29 16:21:43.176062846 -0800
+@@ -554,6 +554,11 @@
+ 		return 0;
+ 	}
+ 
++	//Impose limit on how much to write ahead of current position
++	#define ALLOCATION_LIMIT 0x200000
++	if(len - st.st_size > ALLOCATION_LIMIT)
++	return 0;
++
+ 	DEBUG(10,("vfs_fill_sparse: write zeros in file %s from len %.0f to len %.0f (%.0f bytes)\n",
+ 		fsp->fsp_name, (double)st.st_size, (double)len, (double)(len - st.st_size)));
+ 

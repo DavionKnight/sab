@@ -1,0 +1,33 @@
+diff -Nura samba-3.6.9/source3/modules/vfs_default.c samba-3.6.9-update/source3/modules/vfs_default.c
+--- samba-3.6.9/source3/modules/vfs_default.c	2012-10-29 02:05:46.000000000 -0700
++++ samba-3.6.9-update/source3/modules/vfs_default.c	2013-11-01 15:22:04.187182000 -0700
+@@ -927,11 +927,13 @@
+ 
+ 	START_PROFILE(syscall_ftruncate);
+ 
++	/* ignore file fill when presented with new file of known size.
+ 	if (lp_strict_allocate(SNUM(fsp->conn)) && !fsp->is_sparse) {
+ 		result = strict_allocate_ftruncate(handle, fsp, len);
+ 		END_PROFILE(syscall_ftruncate);
+ 		return result;
+ 	}
++	*/
+ 
+ 	/* we used to just check HAVE_FTRUNCATE_EXTEND and only use
+ 	   sys_ftruncate if the system supports it. Then I discovered that
+diff -Nura samba-3.6.9/source3/smbd/vfs.c samba-3.6.9-update/source3/smbd/vfs.c
+--- samba-3.6.9/source3/smbd/vfs.c	2012-10-29 02:05:46.000000000 -0700
++++ samba-3.6.9-update/source3/smbd/vfs.c	2013-11-01 15:22:03.623138000 -0700
+@@ -635,6 +635,12 @@
+ 		return 0;
+ 	}
+ 
++	//Impose limit on how much to write ahead of current position
++	#define ALLOCATION_LIMIT 0x200000
++	if(len - fsp->fsp_name->st.st_ex_size > ALLOCATION_LIMIT)
++		return 0;
++
++
+ #ifdef S_ISFIFO
+ 	if (S_ISFIFO(fsp->fsp_name->st.st_ex_mode)) {
+ 		return 0;

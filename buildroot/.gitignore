@@ -1,0 +1,16 @@
+/host
+/output
+/..config.tmp
+/.config
+/.config.old
+/dl
+/.auto.deps
+/.config.cmd
+*.depend
+*.o
+/*.patch
+/*.diff
+*.orig
+*.rej
+*~
+*.pyc

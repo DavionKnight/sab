@@ -1,0 +1,16 @@
+--- samba30-3.0.37/source/modules/vfs_default.c	2009-09-30 05:21:56.000000000 -0700
++++ samba30-3.0.37-final/source/modules/vfs_default.c	2014-01-29 16:21:43.176062846 -0800
+@@ -711,11 +711,13 @@
+ 
+ 	START_PROFILE(syscall_ftruncate);
+ 
++	/* Ignore file fill when presented with new file of known size.  
+ 	if (lp_strict_allocate(SNUM(fsp->conn))) {
+ 		result = strict_allocate_ftruncate(handle, fsp, fd, len);
+ 		END_PROFILE(syscall_ftruncate);
+ 		return result;
+ 	}
++	*/
+ 
+ 	/* we used to just check HAVE_FTRUNCATE_EXTEND and only use
+ 	   sys_ftruncate if the system supports it. Then I discovered that

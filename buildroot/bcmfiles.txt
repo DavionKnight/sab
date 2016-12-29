@@ -1,0 +1,2 @@
+kernel/linux-3.6.5
+bootloader/uboot-2012.10

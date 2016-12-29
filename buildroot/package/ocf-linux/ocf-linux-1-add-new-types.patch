@@ -1,0 +1,35 @@
+--- ocf-linux-20120127/ocf/cryptodev.h.orig	2014-03-17 23:53:34.147160879 -0400
++++ ocf-linux-20120127/ocf/cryptodev.h	2014-03-17 23:53:34.147160879 -0400
+@@ -70,6 +70,7 @@
+ #define MD5_HASH_LEN		16
+ #define SHA1_HASH_LEN		20
+ #define RIPEMD160_HASH_LEN	20
++#define SHA2_224_HASH_LEN	28
+ #define SHA2_256_HASH_LEN	32
+ #define SHA2_384_HASH_LEN	48
+ #define SHA2_512_HASH_LEN	64
+@@ -83,6 +84,7 @@
+ #define MD5_HMAC_BLOCK_LEN			64
+ #define SHA1_HMAC_BLOCK_LEN			64
+ #define RIPEMD160_HMAC_BLOCK_LEN	64
++#define SHA2_224_HMAC_BLOCK_LEN		64
+ #define SHA2_256_HMAC_BLOCK_LEN		64
+ #define SHA2_384_HMAC_BLOCK_LEN		128
+ #define SHA2_512_HMAC_BLOCK_LEN		128
+@@ -157,7 +159,15 @@
+ #define CRYPTO_SHA2_512			24
+ #define CRYPTO_RIPEMD160		25
+ #define	CRYPTO_LZS_COMP			26
+-#define CRYPTO_ALGORITHM_MAX	26 /* Keep updated - see above */
++
++#define CRYPTO_AES_ECB          27
++#define CRYPTO_AES_CTR          28
++#define CRYPTO_DES_ECB          29
++#define CRYPTO_3DES_ECB         30
++#define CRYPTO_SHA2_224_HMAC	31
++#define CRYPTO_SHA2_224			32
++
++#define CRYPTO_ALGORITHM_MAX	32 /* Keep updated - see above */
+ 
+ /* Algorithm flags */
+ #define CRYPTO_ALG_FLAG_SUPPORTED	0x01 /* Algorithm is supported */

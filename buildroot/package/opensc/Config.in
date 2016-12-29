@@ -1,0 +1,7 @@
+config BR2_PACKAGE_OPENSC
+	select BR2_PACKAGE_PCSC_LITE
+	bool "opensc"
+	help
+	  OpenSC provides a set of libraries and utilities to work with smart cards.
+
+	  https://github.com/OpenSC/OpenSC/wiki

@@ -1,0 +1,56 @@
+diff -ur samba-3.6.9.orig/source3/lib/recvfile.c samba-3.6.9/source3/lib/recvfile.c
+--- samba-3.6.9.orig/source3/lib/recvfile.c	2012-10-29 05:05:46.000000000 -0400
++++ samba-3.6.9/source3/lib/recvfile.c	2014-05-08 22:10:53.388029000 -0400
+@@ -143,8 +143,13 @@
+ 			SMB_OFF_T offset,
+ 			size_t count)
+ {
++#define BCM_CUSTOM_RECVFILE
++#ifdef BCM_CUSTOM_RECVFILE
++	static bool try_splice_call = true;
++#else
+ 	static int pipefd[2] = { -1, -1 };
+ 	static bool try_splice_call = false;
++#endif
+ 	size_t total_written = 0;
+ 	loff_t splice_offset = offset;
+ 
+@@ -171,6 +176,7 @@
+ 				count);
+ 	}
+ 
++#ifndef BCM_CUSTOM_RECVFILE
+ 	if ((pipefd[0] == -1) && (pipe(pipefd) == -1)) {
+ 		try_splice_call = false;
+ 		return default_sys_recvfile(fromfd, tofd, offset, count);
+@@ -209,6 +215,30 @@
+ 		total_written += nread;
+ 		count -= nread;
+ 	}
++#else
++	while (count > 0) {
++		int nread;
++
++		nread = splice(fromfd, NULL, tofd, &splice_offset,
++			       count, SPLICE_F_MOVE);
++
++		if (nread == -1) {
++			if (errno == EINTR) {
++				continue;
++			}
++			if (total_written == 0 &&
++			    (errno == EBADF || errno == EINVAL)) {
++				try_splice_call = false;
++				return default_sys_recvfile(fromfd, tofd,
++							    offset, count);
++			}
++			break;
++		}
++
++		total_written += nread;
++		count -= nread;
++	}
++#endif
+ 
+  done:
+ 	if (count) {

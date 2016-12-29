@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# Start the USBD as ACM + Mass storage composite driver
+#
+
+insmod /lib/modules/bcmdrivers/usbd/bcm_udc_dwc.ko
+modprobe g_acm_ms file=/dev/ram9 removable=Y
+

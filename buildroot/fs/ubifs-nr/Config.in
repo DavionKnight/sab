@@ -1,0 +1,186 @@
+config BR2_TARGET_ALTFS_UBIFS
+	bool "ubifs custom (non-root) filesystem"
+	help
+	  Build a ubifs custom (non-root) filesystem
+	  
+if BR2_TARGET_ALTFS_UBIFS
+
+config BR2_TARGET_ALTFS_UBIFS_DIR
+	string "Directory path"
+	default ""
+	help
+	  Path to the directory containing files to be included in the filesystem.
+
+choice
+	prompt "Flash Type"
+	default BR2_TARGET_ALTFS_UBIFS_MT29F8G08ABACA
+
+config BR2_TARGET_ALTFS_UBIFS_HY27UF084G2B
+	bool "Hynix HY27UF084G2B NAND - 4Gb"
+    
+config BR2_TARGET_ALTFS_UBIFS_MT29F1G08ABADA
+	bool "Micron MT29F1G08ABADA NAND - 1Gb"
+    
+config BR2_TARGET_ALTFS_UBIFS_MT29F2G08ABAEA
+	bool "Micron MT29F2G08ABAEA NAND - 2Gb"
+    
+config BR2_TARGET_ALTFS_UBIFS_MT29F8G08ABACA
+	bool "Micron MT29F8G08ABACA NAND - 8Gb"
+    
+config BR2_TARGET_ALTFS_UBIFS_MT29F16G08CBACA
+	bool "Micron MT29F16G08CBACA NAND - 16Gb"
+    
+config BR2_TARGET_ALTFS_UBIFS_MT29F128G08AJAAA
+	bool "Micron MT29F128G08AJAAA NAND - 128Gb"
+    
+config BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	bool "Select custom I/O and erase size"
+
+endchoice
+    
+config BR2_TARGET_ALTFS_UBIFS_CUSTOM_MINIOSIZE
+	hex "Minimum I/O Size"
+	depends on BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	default 0x1000
+	help
+	  Set to minimum I/O size (usually page size)
+
+config BR2_TARGET_ALTFS_UBIFS_CUSTOM_LEBSIZE
+	hex "Erase block size"
+	depends on BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	default 0x3E000
+	help
+	  Set to logical erase size
+
+config BR2_TARGET_ALTFS_UBIFS_CUSTOM_MAXLEBCNT
+	int "Maximum LEB count"
+	depends on BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	default 4096
+	help
+	  Set to maximum count of erase blocks
+
+config BR2_TARGET_ALTFS_UBIFS_LEBSIZE
+	hex
+	default 0x1F000 if BR2_TARGET_ALTFS_UBIFS_HY27UF084G2B
+	default 0x1F000 if BR2_TARGET_ALTFS_UBIFS_MT29F1G08ABADA
+	default 0x1F000 if BR2_TARGET_ALTFS_UBIFS_MT29F2G08ABAEA
+	default 0x3E000 if BR2_TARGET_ALTFS_UBIFS_MT29F8G08ABACA
+	default 0xFE000 if BR2_TARGET_ALTFS_UBIFS_MT29F16G08CBACA
+	default 0xFC000 if BR2_TARGET_ALTFS_UBIFS_MT29F128G08AJAAA
+	default $(BR2_TARGET_ALTFS_UBIFS_CUSTOM_LEBSIZE) if BR2_TARGET_ALTFS_UBIFS_CUSTOM
+
+config BR2_TARGET_ALTFS_UBIFS_MINIOSIZE
+	hex
+	default 0x800 if BR2_TARGET_ALTFS_UBIFS_HY27UF084G2B
+	default 0x800 if BR2_TARGET_ALTFS_UBIFS_MT29F1G08ABADA
+	default 0x800 if BR2_TARGET_ALTFS_UBIFS_MT29F2G08ABAEA
+	default 0x1000 if BR2_TARGET_ALTFS_UBIFS_MT29F8G08ABACA
+	default 0x1000 if BR2_TARGET_ALTFS_UBIFS_MT29F16G08CBACA
+	default 0x2000 if BR2_TARGET_ALTFS_UBIFS_MT29F128G08AJAAA
+	default $(BR2_TARGET_ALTFS_UBIFS_CUSTOM_MINIOSIZE) if BR2_TARGET_ALTFS_UBIFS_CUSTOM
+
+config BR2_TARGET_ALTFS_UBIFS_MAXLEBCNT
+	int
+	default 3494 if BR2_TARGET_ALTFS_UBIFS_HY27UF084G2B
+	default 484 if BR2_TARGET_ALTFS_UBIFS_MT29F1G08ABADA
+	default 1488 if BR2_TARGET_ALTFS_UBIFS_MT29F2G08ABAEA
+	default 3750 if BR2_TARGET_ALTFS_UBIFS_MT29F8G08ABACA
+	default 1936 if BR2_TARGET_ALTFS_UBIFS_MT29F16G08CBACA
+	default 7956 if BR2_TARGET_ALTFS_UBIFS_MT29F128G08AJAAA
+	default $(BR2_TARGET_ALTFS_UBIFS_CUSTOM_MAXLEBCNT) if BR2_TARGET_ALTFS_UBIFS_CUSTOM
+
+choice
+	prompt "ubifs runtime compression"
+	default BR2_TARGET_ALTFS_UBIFS_RT_NONE
+	help
+	  Select which compression format to use at run-time within
+	  the ubifs file system.
+
+config BR2_TARGET_ALTFS_UBIFS_RT_NONE
+	bool "no compression"
+	help
+	  Don't use run-time compression.
+
+config BR2_TARGET_ALTFS_UBIFS_RT_ZLIB
+	bool "gzip"
+	help
+	  Use zlib compression at run-time.
+
+config BR2_TARGET_ALTFS_UBIFS_RT_LZO
+	bool "lzo"
+	help
+	  Use lzo compression at run-time.
+
+endchoice
+
+choice
+	prompt "Compression method"
+	default BR2_TARGET_ALTFS_UBIFS_NONE
+	help
+	  Select which compression format to compress the final image
+	  into.
+
+config BR2_TARGET_ALTFS_UBIFS_NONE
+	bool "no compression"
+	help
+	  Do not compress the ubifs filesystem.
+
+config BR2_TARGET_ALTFS_UBIFS_GZIP
+	bool "gzip"
+	help
+	  Do compress the ubifs filesystem with gzip.
+
+config BR2_TARGET_ALTFS_UBIFS_BZIP2
+	bool "bzip2"
+	help
+	  Do compress the ubifs filesystem with bzip2.
+
+config BR2_TARGET_ALTFS_UBIFS_LZMA
+	bool "lzma"
+	help
+	  Do compress the ubifs filesystem with lzma.
+
+endchoice
+
+config BR2_TARGET_ALTFS_UBI
+	bool "Embed into an UBI image"
+	default y
+	help
+	  Build an ubi image from the ubifs one (with ubinize).
+
+config BR2_TARGET_ALTFS_UBI_CUSTOM_PEBSIZE
+	hex "UBI physical erase block size"
+	depends on BR2_TARGET_ALTFS_UBI
+	depends on BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	default 0x40000
+	help
+	  Tells ubinize the physical eraseblock size of the flash chip
+	  the ubi image is created for.
+
+config BR2_TARGET_ALTFS_UBI_CUSTOM_SUBSIZE
+	int "UBI sub-page size"
+	depends on BR2_TARGET_ALTFS_UBI
+	depends on BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	default 0
+	help
+	  Tells ubinize that the flash supports sub-pages and the sub-page
+	  size. Use 0 if subpages are not supported on flash chip.
+
+config BR2_TARGET_ALTFS_UBI_PEBSIZE
+	hex
+	depends on BR2_TARGET_ALTFS_UBI
+	default 0x20000 if BR2_TARGET_ALTFS_UBIFS_HY27UF084G2B
+	default 0x20000 if BR2_TARGET_ALTFS_UBIFS_MT29F1G08ABADA
+	default 0x20000 if BR2_TARGET_ALTFS_UBIFS_MT29F2G08ABAEA
+	default 0x40000 if BR2_TARGET_ALTFS_UBIFS_MT29F8G08ABACA
+	default 0x100000 if BR2_TARGET_ALTFS_UBIFS_MT29F16G08CBACA
+	default 0x100000 if BR2_TARGET_ALTFS_UBIFS_MT29F128G08AJAAA
+	default $(BR2_TARGET_ALTFS_UBI_CUSTOM_PEBSIZE) if BR2_TARGET_ALTFS_UBIFS_CUSTOM
+
+config BR2_TARGET_ALTFS_UBI_SUBSIZE
+	hex
+	depends on BR2_TARGET_ALTFS_UBI
+	default $(BR2_TARGET_ALTFS_UBI_CUSTOM_SUBSIZE) if BR2_TARGET_ALTFS_UBIFS_CUSTOM
+	default 0 
+
+endif
