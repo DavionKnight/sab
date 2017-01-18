@@ -144,6 +144,7 @@ static const struct stmicro_spi_flash_params stmicro_spi_flash_table[] = {
 		.nr_sectors = 16,
 		.name = "M25P80",
 	},
+#if 0/*spi flash use 16MB micron chip by zhangjiajie*/
 	{
 		.idcode1 = STM_ID_M25P128,
 		.flags = 0,
@@ -152,6 +153,16 @@ static const struct stmicro_spi_flash_params stmicro_spi_flash_table[] = {
 		.nr_sectors = 64,
 		.name = "M25P128",
 	},
+#else
+	{
+		.idcode1 = STM_ID_M25P128,
+		.flags = 0,
+		.page_size = 256,
+		.pages_per_sector = 256,
+		.nr_sectors = 256,
+		.name = "M25P128_",
+	},
+#endif
 	{
 		.idcode1 = STM_ID_N25Q256,
 		.flags = 0,

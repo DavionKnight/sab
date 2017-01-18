@@ -523,6 +523,9 @@ static void iproc_i2c_init (int speed, int slaveadd)
 extern void iproc_i2c_iomux(int op);
 void i2c_init (int speed, int slaveadd)
 {
+#ifdef IPROC_I2C_DBG
+    debug("\n%s: Entering i2c_init\n", __func__);
+#endif /* IPROC_I2C_DBG */
 #ifdef CONFIG_I2C_MULTI_BUS
     unsigned int old_bus;
     old_bus = i2c_get_bus_num();
@@ -534,7 +537,7 @@ void i2c_init (int speed, int slaveadd)
     i2c_set_bus_num(2);
     iproc_i2c_init(speed, slaveadd);
 #endif
-    i2c_set_bus_num(old_bus);
+    //i2c_set_bus_num(old_bus); /* tianzhy */
 #else
     iproc_i2c_init(speed, slaveadd);
 #endif

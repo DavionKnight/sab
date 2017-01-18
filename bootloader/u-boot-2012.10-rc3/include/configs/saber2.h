@@ -131,7 +131,11 @@
 #error "Saber2 doesn't support 32-bit DDR with ECC."
 #endif
 /* MT41K512M8RH-125E */
+#if 0 /*modify by tianzhy */
 #define CONFIG_DDR_ROW_BITS                 16
+#else
+#define CONFIG_DDR_ROW_BITS                 14
+#endif
 #define CONFIG_DDR_COL_BITS                 10
 #define CONFIG_DDR_BANK_BITS                3
 
@@ -256,6 +260,9 @@
 
 #else /* !CONFIG_IPROC_MIN_FEATURES */
 
+/* Enabler general SPI for fpga and dpll */
+#define CONFIG_GENERAL_SPI   /* by tianzhy 2016-12-19*/
+
 /* Enable generic u-boot SPI flash drivers and commands */
 #define CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH
@@ -368,6 +375,7 @@
 #define CONFIG_SYS_HUSH_PARSER
 
 /* I2C */
+#define CONFIG_HARD_I2C  /* tianzhy */
 #define CONFIG_CMD_I2C
 #define CONFIG_IPROC_I2C
 #define CONFIG_SYS_I2C_SPEED    100000  /* Default on 100KHz */
