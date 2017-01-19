@@ -328,7 +328,7 @@
 #define CONFIG_ENV_SECT_SIZE                    0x20000 /* size of one complete sector */
 #elif defined(CONFIG_SPI_FLASH)
 #define CONFIG_ENV_IS_IN_SPI_FLASH              1
-#define CONFIG_ENV_OFFSET                       0xc0000
+#define CONFIG_ENV_OFFSET                       0x200000 /*Modify form 0xc0000 by zhangjiajie*/
 #define CONFIG_ENV_SPI_MAX_HZ                   10000000
 #define CONFIG_ENV_SPI_MODE                     SPI_MODE_3
 #define CONFIG_ENV_SPI_BUS                      CONFIG_IPROC_QSPI_BUS
@@ -343,7 +343,7 @@
 #if CONFIG_IPROC_EMULATION
 #define CONFIG_ENV_SIZE                         0x1000      /* 4KB */
 #else
-#define CONFIG_ENV_SIZE                         0x10000     /* 64KB */
+#define CONFIG_ENV_SIZE                         0x200000     /*Modify form 64KB to 2M by zhangjiajie*/
 #endif
 #endif
 
@@ -371,7 +371,7 @@
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_MTD_DEVICE
 #define MTDIDS_DEFAULT      "nand0=nand_iproc.0"
-#define MTDPARTS_DEFAULT    "mtdparts=mtdparts=nand_iproc.0:1024k(nboot),1024k(nenv),8192k(nsystem),1038336k(ndata)"
+#define MTDPARTS_DEFAULT    "mtdparts=nand_iproc.0:32m(kernel1),32m(kernel2),2m(itable),416m(application),528m(data),-(reserved)"
 #define CONFIG_SYS_HUSH_PARSER
 
 /* I2C */
@@ -446,5 +446,19 @@
 #undef CONFIG_ENV_SIZE
 #define CONFIG_ENV_SIZE                     512
 #endif
+
+/*add by zhangjiajie 2017-1-19*/
+#define CONFIG_EXTRA_ENV_SETTINGS       \                                         
+"format=mtdparts delall;mtdparts default;saveenv;\
+	nand erase.part application;ubi part application 2048;ubi create home;\
+	nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;\
+	nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;\
+	nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
+"dnu=tftp 0x61000000 u-boot.bin;sf probe 0;sf erase 0x0 0x200000;\
+	sf write 0x61000000 0x0 0x200000\0" \   
+"dnk=\0" \   
+"ethaddr=00:1d:80:01:03:05\0" \   
+"ipaddr=192.168.0.33\0" \   
+"serverip=192.168.0.88\0"
 
 #endif /* __SABER2_H */
