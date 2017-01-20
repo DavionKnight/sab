@@ -1,0 +1,16 @@
+# /etc/profile: system-wide .profile file for the Bourne shells
+
+echo
+#echo -n "Processing /etc/profile... "
+# no-op
+#echo "Done"
+#echo
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export LD_LIBRARY_PATH=/lib:/usr/lib
+
+/bin/hostname Huahuan
+USER="'id -un'"
+LOGNAME=$USER
+HOSTNAME='/bin/hostname'
+PS1='[\u@\h:\W]#'
+

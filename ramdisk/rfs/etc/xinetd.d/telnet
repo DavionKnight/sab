@@ -1,0 +1,11 @@
+service telnet 
+{
+        flags = REUSE
+        disable = no
+        socket_type = stream 
+        wait = no 
+        user = root 
+        server = /usr/sbin/in.telnetd 
+#        server_args =
+        #only_from =  
+}
