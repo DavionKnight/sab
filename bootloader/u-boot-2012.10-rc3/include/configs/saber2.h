@@ -145,7 +145,7 @@
 #else
 #define CONFIG_DDR_BYTES_PER_COL            2
 #endif
-#define CONFIG_SYS_MALLOC_LEN               0x40000
+#define CONFIG_SYS_MALLOC_LEN               0x400000 /*modify from 0x4000 for ubi compile by zhangjiajie*/
 #define CONFIG_PHYS_SDRAM_0                 CONFIG_IPROC_SRAM_BASE
 #define CONFIG_PHYS_SDRAM_1                 0x60000000
 #define CONFIG_PHYS_SDRAM_1_SIZE            (CONFIG_DDR_TOTAL_COLS * CONFIG_DDR_BYTES_PER_COL)
@@ -448,14 +448,20 @@
 #endif
 
 /*add by zhangjiajie 2017-1-19*/
-#define CONFIG_EXTRA_ENV_SETTINGS       \                                         
-"format=mtdparts delall;mtdparts default;saveenv;\
-	nand erase.part application;ubi part application 2048;ubi create home;\
-	nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;\
-	nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;\
-	nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
+/*enable UBI fs*/
+#define CONFIG_CMD_UBIFS
+#define CONFIG_CMD_UBI
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_RBTREE
+#define CONFIG_LZO
+#define CONFIG_SYS_NAND_BLOCK_SIZE      (128 * 1024)
+
+/*ubi part kernel1 4096,the value 4096 is in MT29F16G08CBACA flash
+when using spansion, change to 2048,and CONFIG_SYS_MALLOC to 0x100000*/
+#define CONFIG_EXTRA_ENV_SETTINGS       \
+"format=mtdparts delall;mtdparts default;saveenv;nand erase.part kernel1;ubi part kernel1 4096;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 4096;ubi create kernel2;nand erase.part application;ubi part application 4096;ubi create home;nand erase.part data;ubi part data 4096;ubi create data; ubi info 1\0" \
 "dnu=tftp 0x61000000 u-boot.bin;sf probe 0;sf erase 0x0 0x200000;\
-	sf write 0x61000000 0x0 0x200000\0" \   
+sf write 0x61000000 0x0 0x200000\0" \   
 "dnk=\0" \   
 "ethaddr=00:1d:80:01:03:05\0" \   
 "ipaddr=192.168.0.33\0" \   
