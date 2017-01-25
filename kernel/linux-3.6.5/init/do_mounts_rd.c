@@ -38,6 +38,7 @@ int __initdata rd_image_start;		/* starting block # of image */
 static int __init ramdisk_start_setup(char *str)
 {
 	rd_image_start = simple_strtol(str,NULL,0);
+	printk("init domountsrd rd_image_start=%d\n",rd_image_start);
 	return 1;
 }
 __setup("ramdisk_start=", ramdisk_start_setup);
@@ -70,6 +71,7 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	unsigned char *buf;
 	const char *compress_name;
 	unsigned long n;
+	int i=0;
 
 	buf = kmalloc(size, GFP_KERNEL);
 	if (!buf)
@@ -86,7 +88,10 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	 */
 	sys_lseek(fd, start_block * BLOCK_SIZE, 0);
 	sys_read(fd, buf, size);
-
+printk("start_block:%d\n",start_block);
+for(i=0;i<size;i++)
+        printk("0x%x ",*(buf+i));
+    printk("\n");
 	*decompressor = decompress_method(buf, size, &compress_name);
 	if (compress_name) {
 		printk(KERN_NOTICE "RAMDISK: %s image found at block %d\n",
@@ -197,7 +202,7 @@ int __init rd_load_image(char *from)
 	in_fd = sys_open(from, O_RDONLY, 0);
 	if (in_fd < 0)
 		goto noclose_input;
-
+printk("rd_load_image rd_image_start=%d\n",rd_image_start);
 	nblocks = identify_ramdisk_image(in_fd, rd_image_start, &decompressor);
 	if (nblocks < 0)
 		goto done;

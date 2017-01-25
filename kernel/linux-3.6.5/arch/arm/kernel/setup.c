@@ -590,6 +590,7 @@ setup_ramdisk(int doload, int prompt, int image_start, unsigned int rd_sz)
 	extern int rd_size, rd_image_start, rd_prompt, rd_doload;
 
 	rd_image_start = image_start;
+	printk("setup rd_image_start=%d\n",rd_image_start);
 	rd_prompt = prompt;
 	rd_doload = doload;
 

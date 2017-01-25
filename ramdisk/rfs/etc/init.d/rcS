@@ -26,7 +26,7 @@ mount -a
 echo /sbin/mdev > /proc/sys/kernel/hotplug
 
 mkdir -p /lib/modules/$(uname -r)/
-mv /lib/*.ko /lib/modules/$(uname -r)/
+#mv /lib/*.ko /lib/modules/$(uname -r)/
 
 #mount -t yaffs2 /dev/mtdblock5 /home/
 
@@ -38,13 +38,13 @@ mkdir /os1/
 mkdir /os2/
 mkdir /data
 
-ubiattach /dev/ubi_ctrl -m 2  
+ubiattach /dev/ubi_ctrl -m 0  
 mount -t ubifs /dev/ubi0_0 /os1/
-ubiattach /dev/ubi_ctrl -m 3  
+ubiattach /dev/ubi_ctrl -m 2  
 mount -t ubifs /dev/ubi1_0 /os2/
-ubiattach /dev/ubi_ctrl -m 5  
+ubiattach /dev/ubi_ctrl -m 3  
 mount -t ubifs /dev/ubi2_0 /home/
-ubiattach /dev/ubi_ctrl -m 6  
+ubiattach /dev/ubi_ctrl -m 4  
 mount -t ubifs /dev/ubi3_0 /data/ 
 
 
@@ -65,7 +65,6 @@ tftp_cliet_ip=192.168.1.1
 tftp_server_ip=192.168.1.254
 if [ ! -f /home/bin/autorun.sh ]
 then
-	insmod /usr/bin/wdt.ko #insmod wdt if no application
         cd /root
         echo "download applicaion..."
         /sbin/ifconfig eth0  ${tftp_cliet_ip}
