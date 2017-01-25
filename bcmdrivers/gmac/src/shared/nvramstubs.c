@@ -94,8 +94,8 @@ static nvram_t fake_nvram[] = {
 #else
 #define CONFIG_SPI_BASE			0x1e000000
 #endif /* CONFIG_MACH_IPROC_P7 */
-#define CONFIG_ENV_OFFSET		0xc0000		/* 30000-b0000 - use last 10000 for env */
-#define CONFIG_ENV_SIZE			0x10000 /* 64K */
+#define CONFIG_ENV_OFFSET		0x200000		/* 30000-b0000 - use last 10000 for env */
+#define CONFIG_ENV_SIZE			0x200000 /* 64K */
 #define CONFIG_ENV_MAX_ENTRIES	512
 
 #define UBOOT_ENV_ADDR			CONFIG_SPI_BASE+CONFIG_ENV_OFFSET
