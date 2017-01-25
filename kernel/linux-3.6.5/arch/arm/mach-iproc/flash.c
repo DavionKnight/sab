@@ -47,7 +47,7 @@ static struct mtd_partition sflash_partition_map[] = {
         .name = "boot",
         .offset = 0x00000000,
 #if defined(CONFIG_MACH_SB2) && defined(CONFIG_MACH_IPROC_EMULATION)
-        .size = 768 * 1024,
+        .size = 2 * 1024 * 1024, /*modify by zhangjiajie 2017-2-6*/
 #else
         .size = 640 * 1024,
 #endif
@@ -56,11 +56,12 @@ static struct mtd_partition sflash_partition_map[] = {
         .name = "env",
         .offset = MTDPART_OFS_APPEND,
 #if defined(CONFIG_MACH_SB2) && defined(CONFIG_MACH_IPROC_EMULATION)
-        .size = 256 * 1024,
+        .size = 2 * 1024 * 1024,  /*modify by zhangjiajie 2017-2-6*/
 #else
         .size = 384 * 1024,
 #endif
     },
+#if 0/*deleted by zhangjiajie 2017-2-6*/
     {
         .name = "system",
         .offset = MTDPART_OFS_APPEND,
@@ -75,33 +76,39 @@ static struct mtd_partition sflash_partition_map[] = {
         .offset = MTDPART_OFS_APPEND,
         .size = MTDPART_SIZ_FULL,
     },
+#endif
 };
 #endif /* CONFIG_IPROC_QSPI || CONFIG_IPROC_QSPI_MODULE */
 
 #if defined(CONFIG_IPROC_MTD_NAND) || defined(CONFIG_IPROC_MTD_NAND_MODULE)
 static struct mtd_partition nand_partition_map[] = {
     {
-        .name = "nboot",
+        .name = "kernel1",
         .offset = 0x00000000,
+        .size = 32 * 1024 * 1024,
+    },
+    {
+        .name = "kernel2",
+        .offset = MTDPART_OFS_APPEND,
+        .size = 32 * 1024 * 1024,
+    },
+    {
+        .name = "itable",
+        .offset = MTDPART_OFS_APPEND,
         .size = 2 * 1024 * 1024,
     },
     {
-        .name = "nenv",
+        .name = "application",
         .offset = MTDPART_OFS_APPEND,
-        .size = 4 * 1024 * 1024,
+        .size = 416 * 1024 * 1024,
     },
     {
-        .name = "nsystem",
+        .name = "data",
         .offset = MTDPART_OFS_APPEND,
-        .size = 10 * 1024 * 1024,
+        .size = 528 * 1024 * 1024,
     },
     {
-        .name = "nrootfs",
-        .offset = MTDPART_OFS_APPEND,
-        .size = 48 * 1024 * 1024,
-    },
-    {
-        .name = "ncustfs",
+        .name = "reserved",
         .offset = MTDPART_OFS_APPEND,
         .size = MTDPART_SIZ_FULL,
     },
