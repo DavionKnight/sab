@@ -68,7 +68,7 @@ phy5461_wr_reg(uint phyaddr, uint32 flags, uint16 reg_bank,
 		 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr, wr_data));
 	printf("%s write(0x%x) to phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x)\n",
 		 __FUNCTION__, wr_data, phyaddr, flags, reg_bank, reg_addr);
-
+#if 0
     if (flags & SOC_PHY_REG_1000X) {
         if (reg_addr <= 0x000f) {
             uint16 blk_sel;
@@ -109,18 +109,21 @@ phy5461_wr_reg(uint phyaddr, uint32 flags, uint16 reg_bank,
             }
             break;
         default:
+#endif
             if (!(flags & SOC_PHY_REG_RESERVE_ACCESS)) {
                 /* Must not write to reserved registers */ 
-                if (reg_addr > 0x001e) {
+                if (reg_addr > 0x001f) {
                     rv = SOC_E_PARAM;
                 }
             }
+#if 0
             break;
         }
+#endif
         if (SOC_SUCCESS(rv)) {
 			chip_phy_wr(PHY_EXTERNAL, phyaddr, reg_addr, wr_data);
         }
-    } 
+  //  } 
     if (SOC_FAILURE(rv)) {
 		NET_ERROR(("%s ERROR phyaddr(0x%x) reg_bank(0x%x) reg_addr(0x%x) rv(%d)\n",
 				 __FUNCTION__, phyaddr, reg_bank, reg_addr, rv));
@@ -139,6 +142,7 @@ phy5461_rd_reg(uint phyaddr, uint32 flags, uint16 reg_bank,
 
 	NET_REG_TRACE(("%s going to read phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x)\n",
 			 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr));
+#if 0
     if (flags & SOC_PHY_REG_1000X) {
         if (reg_addr <= 0x000f) {
             uint16 blk_sel;
@@ -176,20 +180,23 @@ phy5461_rd_reg(uint phyaddr, uint32 flags, uint16 reg_bank,
             }
             break;
         default:
+#endif
             if (!(flags & SOC_PHY_REG_RESERVE_ACCESS)) {
                 /* Must not read from reserved registers */ 
-                if (reg_addr > 0x001e) {
+                if (reg_addr > 0x001f) {
                    rv = SOC_E_PARAM;
                 }
             }
+#if 0
             break;
         }
+#endif
         if (SOC_SUCCESS(rv)) {
 			*data = chip_phy_rd(PHY_EXTERNAL, phyaddr, reg_addr);
 			NET_REG_TRACE(("%s rd phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x) data(0x%x)\n",
 					 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr, *data));
         }
-    } 
+//    } 
     if (SOC_FAILURE(rv)) {
 		NET_ERROR(("%s ERROR phyaddr(0x%x) reg_bank(0x%x) reg_addr(0x%x) rv(%d)\n",
 				 __FUNCTION__, phyaddr, reg_bank, reg_addr, rv));
