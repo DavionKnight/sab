@@ -67,7 +67,17 @@ void cmicd_init_soc (void) {
     reg32_write((volatile u32 *)CMIC_SBUS_RING_MAP_16_23, 0x03103775);
     reg32_write((volatile u32 *)CMIC_SBUS_RING_MAP_24_31, 0x0);
 }
-
+/*add by zhangjiajie 2017-2-14*/
+static
+void reset_by_gpio()
+{
+	/*reset phy vsc8211*/
+	reg32_write((volatile u32 *)0x1800a008, 0x00004000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	udelay(20000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00004000);
+	reg32_write((volatile u32 *)0x1800a008, 0x00000000);
+}
 /*****************************************
  * board_init -early hardware init
  *****************************************/
@@ -75,6 +85,8 @@ int board_init (void)
 {
     gd->bd->bi_arch_number = CONFIG_MACH_TYPE;      /* board id for linux */
     gd->bd->bi_boot_params = LINUX_BOOT_PARAM_ADDR; /* adress of boot parameters */
+
+	reset_by_gpio();
 
     return 0;
 }
@@ -232,7 +244,7 @@ int board_late_init (void)
 #endif /* STDK_BUILD */
 
 #if !defined(CONFIG_IPROC_NO_DDR) && defined(CONFIG_SHMOO_AND28_REUSE)
-    save_shmoo_to_flash();
+//    save_shmoo_to_flash();
 #endif
 #endif  /* !defined(CONFIG_IPROC_EMULATION) */
 

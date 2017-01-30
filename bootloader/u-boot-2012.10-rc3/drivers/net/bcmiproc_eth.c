@@ -163,12 +163,14 @@ bcmiproc_miiphy_read(char *devname, unsigned int const addr,
 
 int
 bcmiproc_miiphy_write(char *devname, unsigned int const addr, 
-   unsigned int const reg, unsigned short *const value)
+   unsigned int const reg, unsigned short value)
 {
-	return ethHw_miiphy_write(addr, reg, value);
+	unsigned short *valaddr= &value;
+	printf("bcmiproc_miiphy_write value=0x%x\n",value);
+	return ethHw_miiphy_write(addr, reg, valaddr);
 }
 
-
+extern int phy8211_init(uint phyaddr);
 int
 bcmiproc_eth_register(u8 devid)
 {
@@ -208,13 +210,13 @@ bcmiproc_eth_register(u8 devid)
 	dev->write_hwaddr = bcmiproc_eth_write_hwaddr;
 
 	eth_register(dev);
-
 	ET_TRACE(("Ethernet Driver registered...\n"));
 
 #ifdef CONFIG_CMD_MII
     miiphy_register(dev->name, bcmiproc_miiphy_read, bcmiproc_miiphy_write);
 #endif
 
+//phy8211_init(0x15);
 	ET_TRACE(("et%d: %s exit\n", devid, __FUNCTION__));
 	return 0;
 }

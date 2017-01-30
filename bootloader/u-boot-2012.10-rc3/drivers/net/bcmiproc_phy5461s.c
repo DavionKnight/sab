@@ -66,8 +66,8 @@ phy5461_wr_reg(uint phyaddr, uint32 flags, uint16 reg_bank,
 
 	NET_REG_TRACE(("%s going to write phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x) data(0x%x)\n",
 		 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr, wr_data));
-	//printf("%s write(0x%x) to phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x)\n",
-	//	 __FUNCTION__, wr_data, phyaddr, flags, reg_bank, reg_addr);
+	printf("%s write(0x%x) to phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x)\n",
+		 __FUNCTION__, wr_data, phyaddr, flags, reg_bank, reg_addr);
 
     if (flags & SOC_PHY_REG_1000X) {
         if (reg_addr <= 0x000f) {
@@ -363,6 +363,8 @@ phy5461_ge_interface_set(uint phyaddr, soc_port_if_t pif)
         return SOC_E_UNAVAIL;
     }
 
+printf("phy5461_ge_interface_set,not set now\n");
+#if 0
 	phy5461_rd_reg(phyaddr, PHY_MII_ECRr_FLAGS, PHY_MII_ECRr_BANK, PHY_MII_ECRr_ADDR, &mii_ecr);
 
     if (mii) {
@@ -374,6 +376,8 @@ phy5461_ge_interface_set(uint phyaddr, soc_port_if_t pif)
 	phy5461_wr_reg(phyaddr, PHY_MII_ECRr_FLAGS, PHY_MII_ECRr_BANK, PHY_MII_ECRr_ADDR, &mii_ecr);
 
     return(SOC_E_NONE);
+#endif
+    return 0;
 }
 
 
@@ -436,12 +440,13 @@ phy5461_reset_setup(uint phyaddr)
     /* remove power down */
 	phy5461_mod_reg(phyaddr, PHY_MII_CTRLr_FLAGS, PHY_MII_CTRLr_BANK, PHY_MII_CTRLr_ADDR, 0, MII_CTRL_PD);
     /* Disable super-isolate */
-	phy5461_mod_reg(phyaddr, PHY_MII_POWER_CTRLr_FLAGS, PHY_MII_POWER_CTRLr_BANK, PHY_MII_POWER_CTRLr_ADDR, 0, 1U<<5);
+//	phy5461_mod_reg(phyaddr, PHY_MII_POWER_CTRLr_FLAGS, PHY_MII_POWER_CTRLr_BANK, PHY_MII_POWER_CTRLr_ADDR, 0, 1U<<5);
     /* Enable extended packet length */
-	phy5461_mod_reg(phyaddr, PHY_MII_AUX_CTRLr_FLAGS, PHY_MII_AUX_CTRLr_BANK, PHY_MII_AUX_CTRLr_ADDR, 0x4000, 0x4000);
+//	phy5461_mod_reg(phyaddr, PHY_MII_AUX_CTRLr_FLAGS, PHY_MII_AUX_CTRLr_BANK, PHY_MII_AUX_CTRLr_ADDR, 0x4000, 0x4000);
 
     /* Configure interface to MAC */
 	phy5461_rd_reg(phyaddr, PHY_1000X_MII_CTRLr_FLAGS, PHY_1000X_MII_CTRLr_BANK, PHY_1000X_MII_CTRLr_ADDR, &tmp);
+printf("phy5461_reset_setup read 0 :0x%x\n",tmp);
     /* phy5461_ge_init has reset the phy, powering down the unstrapped interface */
     /* make sure enabled interfaces are powered up */
     /* SGMII (passthrough fiber) or GMII fiber regs */
@@ -474,18 +479,102 @@ phy5461_init(uint phyaddr)
 {
 	uint16	phyid0, phyid1;
 
-	NET_TRACE(("phyaddr %d: %s enter\n", phyaddr, __FUNCTION__));
+	phyaddr &=0xf; /*as a external phy,delete the ext flag by zhangjiajie 2017-2-14*/
 
-	phy5461_rd_reg(phyaddr, PHY_MII_PHY_ID0r_FLAGS, PHY_MII_PHY_ID0r_BANK, PHY_MII_PHY_ID0r_ADDR, &phyid0);
-	phy5461_rd_reg(phyaddr, PHY_MII_PHY_ID1r_FLAGS, PHY_MII_PHY_ID1r_BANK, PHY_MII_PHY_ID1r_ADDR, &phyid1);
+	printf("phyaddr %d: %s enter\n", phyaddr, __FUNCTION__);
 
-	//printf("%s Phy ChipID: 0x%04x:0x%04x\n", __FUNCTION__, phyid1, phyid0);
+//	phy5461_rd_reg(phyaddr, PHY_MII_PHY_ID0r_FLAGS, PHY_MII_PHY_ID0r_BANK, PHY_MII_PHY_ID0r_ADDR, &phyid0);
+	phy5461_rd_reg(0x5, 0, 0, 2, &phyid0);
+	phy5461_rd_reg(0x5, 0, 0, 3, &phyid1);
+
+	printf("%s Phy ChipID: 0x%04x:0x%04x\n", __FUNCTION__, phyid1, phyid0);
 
 	phy5461_reset_setup(phyaddr);
 
 	return 0;
 }
+int phy8211_init(uint phyaddr)
+{
+	const char	*devname;
+	uint16	phyid0, phyid1;
+	uint16	ctrl, mii_ana, mii_ctrl, mii_gb_ctrl,pif, tmp;
+	unsigned long init_time;
 
+	/* use current device */
+	devname = miiphy_get_current_dev();
+printf("devname=%s\n",devname);
+	
+	miiphy_read(devname, phyaddr, 2, &phyid0);
+	miiphy_read(devname, phyaddr, 3, &phyid1);
+
+	printf("%s Phy ChipID: 0x%04x:0x%04x\n", __FUNCTION__, phyid1, phyid0);
+
+#if 1 //phy5461_reset_setup
+#if 1 //phy5461_ge_reset
+	miiphy_read(devname, phyaddr, 0, &ctrl);
+	ctrl |= MII_CTRL_RESET;
+	miiphy_write(devname, phyaddr, 0, ctrl);
+	init_time = get_timer(0);
+	for (;;) {
+
+		udelay(100);
+
+		/* check if out of reset */
+		if (!(miiphy_read(devname,phyaddr, 0, &ctrl) & MII_CTRL_RESET)) {
+			NET_TRACE(("phyaddr %d: %s reset complete\n", phyaddr, __FUNCTION__));
+			return;
+		}
+
+		if (get_timer(init_time) > 10) {
+			/* timeout */
+			NET_ERROR(("phyaddr %d: %s reset not complete\n", phyaddr, __FUNCTION__));
+			return;
+		}
+	}
+#endif
+#if 1
+	/* set advertized bits */
+	miiphy_read(devname, phyaddr, 4, &mii_ana);
+	mii_ana |= MII_ANA_FD_100 | MII_ANA_FD_10;
+	mii_ana |= MII_ANA_HD_100 | MII_ANA_HD_10;
+	miiphy_write(devname, phyaddr, 4, &mii_ana);
+
+    mii_ctrl = MII_CTRL_FD | MII_CTRL_SS_1000 | MII_CTRL_AE | MII_CTRL_RAN;
+    mii_gb_ctrl = MII_GB_CTRL_ADV_1000FD | MII_GB_CTRL_PT;
+
+    pif = SOC_PORT_IF_GMII;
+	miiphy_write(devname, phyaddr, 9, &mii_gb_ctrl);
+	miiphy_write(devname, phyaddr, 9, &mii_ctrl);
+
+
+#endif
+#if 1
+	miiphy_write(devname, phyaddr, 0, MII_CTRL_PD);
+    /* Disable super-isolate */
+//	miiphy_write(devname, phyaddr, 0, 1U<<5);
+    /* Enable extended packet length */
+//	miiphy_write(devname, phyaddr, PHY_MII_AUX_CTRLr_FLAGS, PHY_MII_AUX_CTRLr_BANK, PHY_MII_AUX_CTRLr_ADDR, 0x4000, 0x4000);
+
+    /* Configure interface to MAC */
+	miiphy_read(devname, phyaddr, 0, &tmp);
+    /* phy5461_ge_init has reset the phy, powering down the unstrapped interface */
+    /* make sure enabled interfaces are powered up */
+    /* SGMII (passthrough fiber) or GMII fiber regs */
+    tmp &= ~MII_CTRL_PD;     /* remove power down */
+    /*
+     * Enable SGMII autonegotiation on the switch side so that the
+     * link status changes are reflected in the switch. 
+     * On Bradley devices, LAG failover feature depends on the SerDes
+     * link staus to activate failover recovery.
+     */ 
+    tmp |= MII_CTRL_AE;
+	miiphy_write(devname, phyaddr, 0, &tmp);
+
+#endif
+#endif
+
+	return 0;
+}
 
 /*
  * Function:    

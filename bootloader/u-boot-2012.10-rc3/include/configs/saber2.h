@@ -359,6 +359,7 @@
 #define CONFIG_CMD_DHCP
 #define CONFIG_GMAC_NUM             1
 #define IPROC_ETH_MALLOC_BASE       0xD00000
+#define CONFIG_CMD_MII
 
 /* u-boot rich features */
 #define CONFIG_CMD_RUN
@@ -456,6 +457,10 @@
 #define CONFIG_LZO
 #define CONFIG_SYS_NAND_BLOCK_SIZE      (128 * 1024)
 #define CONFIG_BOOTARGS /* add for ubifsmount err */
+
+#define CONFIG_CMD_LOADB /*add for update by serial port by zhangjiajie*/
+#define CONFIG_PHYLIB /*add vsc8211 phy */
+#define CONFIG_PHY_VITESSE
 
 /*ubi part kernel1 4096,the value 4096 is in MT29F16G08CBACA flash
 when using spansion, change to 2048,and CONFIG_SYS_MALLOC to 0x100000*/

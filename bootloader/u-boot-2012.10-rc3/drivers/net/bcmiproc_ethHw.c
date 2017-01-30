@@ -2345,6 +2345,7 @@ chip_phy_wr(uint ext, uint phyaddr, uint reg, uint16_t v)
 	/* Wait until Mii mgt interface not busy */
     SPINWAIT((reg32_read(phy_ctrl) & (1 << ChipcommonB_MII_Management_Control__BSY)), 1000);
 	tmp = reg32_read(phy_ctrl);
+printf("phy_ctrl=0x%x\n",tmp);
 	if (tmp & (1 << ChipcommonB_MII_Management_Control__BSY)) {
 		ET_ERROR(("phyaddr %x: busy\n", phyaddr));
 	}
@@ -2357,10 +2358,12 @@ chip_phy_wr(uint ext, uint phyaddr, uint reg, uint16_t v)
 		tmp &= ~(1 << ChipcommonB_MII_Management_Control__EXT);
 	}
 	reg32_write(phy_ctrl, tmp);
+printf("after write phy_ctrl=0x%x\n",tmp);
 
 	/* Wait for it to complete */
     SPINWAIT((reg32_read(phy_ctrl) & (1 << ChipcommonB_MII_Management_Control__BSY)), 1000);
 	tmp = reg32_read(phy_ctrl);
+printf("11phy_ctrl=0x%x\n",tmp);
 	if (tmp & (1 << ChipcommonB_MII_Management_Control__BSY)) {
 		ET_ERROR(("phyaddr %x: ChipcommonB_MII_Management_Control did not complete\n", phyaddr));
 	}
@@ -2373,6 +2376,7 @@ chip_phy_wr(uint ext, uint phyaddr, uint reg, uint16_t v)
            (reg << ChipcommonB_MII_Management_Command_Data__RA_R) |		/* RA */
            (2 << ChipcommonB_MII_Management_Command_Data__TA_R) |       /* TA */
 	        v);                                                         /* Data */
+printf("phy_data=0x%x\n",tmp);
 	reg32_write(phy_data, tmp);
 
 	/* Wait for it to complete */
