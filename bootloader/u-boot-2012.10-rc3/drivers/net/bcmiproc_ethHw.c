@@ -1644,9 +1644,10 @@ ethHw_chipAttach(bcm_eth_t *eth_data)
 #elif defined(CONFIG_SABER2)
 	/* Flip switch so AMAC can access serdes */
 	gmac_mdio_set(1);
+ch->phyaddr &= 0xf;
 	gmac_serdes_init(eth_data);
 	phy5461_init(ch->phyaddr);
-    serdes_init(ch->phyaddr);
+	serdes_init(ch->phyaddr);
 #elif defined(CONFIG_HURRICANE2)
 	phy5221_init(ch->phyaddr);
 	phy5221_enable_set(ch->phyaddr, 1);

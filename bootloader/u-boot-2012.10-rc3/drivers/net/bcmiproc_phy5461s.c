@@ -495,8 +495,17 @@ phy5461_init(uint phyaddr)
 	phy5461_rd_reg(0x5, 0, 0, 3, &phyid1);
 
 	printf("%s Phy ChipID: 0x%04x:0x%04x\n", __FUNCTION__, phyid1, phyid0);
-
-	phy5461_reset_setup(phyaddr);
+#if 0
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x2a30);
+	phy5461_wr_reg(0x5, 0, 0, 0x8, 0x0212);
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x52b5);
+	phy5461_wr_reg(0x5, 0, 0, 0x2, 0x000f);
+	phy5461_wr_reg(0x5, 0, 0, 0x1, 0x472a);
+	phy5461_wr_reg(0x5, 0, 0, 0x0, 0x8fa4);
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x2a30);
+	phy5461_wr_reg(0x5, 0, 0, 0x8, 0x0012);
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x0);
+#endif
 
 	return 0;
 }
