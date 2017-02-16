@@ -295,11 +295,21 @@ static void eth_env_init(bd_t *bis)
 		copy_filename(BootFile, s, sizeof(BootFile));
 }
 
+extern int do_mem_mm ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 int eth_initialize(bd_t *bis)
 {
 	int num_devices = 0;
 	eth_devices = NULL;
 	eth_current = NULL;
+
+#if 0
+        int rc = -1;
+	char *arv[2];
+	arv[0]="mm";
+	arv[1]="0x180421ac";
+	printf("eth_initialize 0x180421ac===\n");
+	do_mem_mm(NULL,0,2,arv);
+#endif
 
 	bootstage_mark(BOOTSTAGE_ID_NET_ETH_START);
 #if defined(CONFIG_MII) || defined(CONFIG_CMD_MII)

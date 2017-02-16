@@ -255,9 +255,17 @@ int board_late_init (void)
     return status;
 }
 
+extern int do_mem_mm ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 int board_eth_init(bd_t *bis)
 {
 	int rc = -1;
+#if 0
+	char *arv[2];
+	arv[0]="mm";
+	arv[1]="0x180421ac";
+	printf("board_eth_init 0x180421ac===\n");
+	do_mem_mm(NULL,0,2,arv);
+#endif
 #ifdef CONFIG_BCMIPROC_ETH
 	printf("Registering eth\n");
 	rc = bcmiproc_eth_register(0);

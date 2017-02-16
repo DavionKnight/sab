@@ -705,6 +705,7 @@ static char *failed = "*** failed ***\n";
  *
  ************************************************************************
  */
+extern int do_mem_mm ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 extern int post_check_board_cfg_env( void );
 void board_init_r(gd_t *id, ulong dest_addr)
 {
@@ -714,7 +715,13 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	volatile int *nor_enable;
 #endif
 	gd = id;
-
+#if 1
+	char *arv[2];
+	arv[0]="mm";
+	arv[1]="0x180421ac";
+	printf("board_init_r1 0x180421ac===\n");
+	do_mem_mm(NULL,0,2,arv);
+#endif
 	gd->flags |= GD_FLG_RELOC;	/* tell others: relocation done */
 	bootstage_mark_name(BOOTSTAGE_ID_START_UBOOT_R, "board_init_r");
 
@@ -737,7 +744,10 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #ifdef CONFIG_SERIAL_MULTI
 	serial_initialize();
 #endif
-
+#if 0
+	printf("board_init_r2 0x180421ac===\n");
+	do_mem_mm(NULL,0,2,arv);
+#endif
 	debug("Now running in RAM - U-Boot at: %08lx\n", dest_addr);
 
 #ifdef CONFIG_LOGBUFFER
@@ -884,7 +894,10 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #ifdef CONFIG_BOARD_LATE_INIT
 	board_late_init();
 #endif
-
+#if 0
+	printf("board_init_r 0x180421ac===\n");
+	do_mem_mm(NULL,0,2,arv);
+#endif
 #ifdef CONFIG_BITBANGMII
 	bb_miiphy_init();
 #endif
