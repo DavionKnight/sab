@@ -54,6 +54,7 @@ void arp_raw_request(IPaddr_t sourceIP, const uchar *targetEther,
 	uchar *pkt;
 	struct arp_hdr *arp;
 	int eth_hdr_size;
+	unsigned int arp_len = 0;
 
 	debug_cond(DEBUG_DEV_PKT, "ARP broadcast %d\n", NetArpWaitTry);
 
@@ -75,7 +76,13 @@ void arp_raw_request(IPaddr_t sourceIP, const uchar *targetEther,
 	memcpy(&arp->ar_tha, targetEther, ARP_HLEN);	/* target ET addr */
 	NetWriteIP(&arp->ar_tpa, targetIP);		/* target IP addr */
 
-	NetSendPacket(NetArpTxPacket, eth_hdr_size + ARP_HDR_SIZE);
+	arp_len = eth_hdr_size + ARP_HDR_SIZE;
+	if(arp_len <64)
+	{
+		printf("arp len=%d\n", arp_len);
+		arp_len = 66;
+	}
+	NetSendPacket(NetArpTxPacket, arp_len);
 }
 
 void ArpRequest(void)

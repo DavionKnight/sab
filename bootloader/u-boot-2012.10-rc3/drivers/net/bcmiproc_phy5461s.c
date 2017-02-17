@@ -485,6 +485,7 @@ int
 phy5461_init(uint phyaddr)
 {
 	uint16	phyid0, phyid1;
+	uint16	val = 0;
 
 	phyaddr &=0xf; /*as a external phy,delete the ext flag by zhangjiajie 2017-2-14*/
 
@@ -495,16 +496,44 @@ phy5461_init(uint phyaddr)
 	phy5461_rd_reg(0x5, 0, 0, 3, &phyid1);
 
 	printf("%s Phy ChipID: 0x%04x:0x%04x\n", __FUNCTION__, phyid1, phyid0);
-#if 0
-	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x2a30);
-	phy5461_wr_reg(0x5, 0, 0, 0x8, 0x0212);
-	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x52b5);
-	phy5461_wr_reg(0x5, 0, 0, 0x2, 0x000f);
-	phy5461_wr_reg(0x5, 0, 0, 0x1, 0x472a);
-	phy5461_wr_reg(0x5, 0, 0, 0x0, 0x8fa4);
-	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x2a30);
-	phy5461_wr_reg(0x5, 0, 0, 0x8, 0x0012);
-	phy5461_wr_reg(0x5, 0, 0, 0x1f, 0x0);
+#if 1
+	val = 0x2a30;	
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+	val = 0x0212;
+	phy5461_wr_reg(0x5, 0, 0, 0x8, &val);
+	udelay(1000);
+	val = 0x32b5;
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+	val = 0xf;
+	phy5461_wr_reg(0x5, 0, 0, 0x2, &val);
+	udelay(1000);
+	val = 0x472a;
+	phy5461_wr_reg(0x5, 0, 0, 0x1, &val);
+	udelay(1000);
+	val = 0x8fa4;
+	phy5461_wr_reg(0x5, 0, 0, 0x0, &val);
+	udelay(1000);
+	val = 0x2a30;
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+	val = 0x12;
+	phy5461_wr_reg(0x5, 0, 0, 0x8, &val);
+	udelay(1000);
+	val = 0;
+	phy5461_wr_reg(0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+
+	val = 0x4101;
+	phy5461_wr_reg(0x5, 0, 0, 0x1e, &val);
+	udelay(1000);
+	val = 0x1940;
+	phy5461_wr_reg(0x5, 0, 0, 0x0, &val);
+	udelay(1000);
+	val = 0x1140;
+	phy5461_wr_reg(0x5, 0, 0, 0x0, &val);
+	printf("vsc8211 init done!\n");
 #endif
 
 	return 0;
