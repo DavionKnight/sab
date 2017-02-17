@@ -715,7 +715,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	volatile int *nor_enable;
 #endif
 	gd = id;
-#if 1
+#if 0
 	char *arv[2];
 	arv[0]="mm";
 	arv[1]="0x180421ac";
