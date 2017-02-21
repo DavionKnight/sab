@@ -1608,6 +1608,10 @@ ethHw_chipAttach(bcm_eth_t *eth_data)
 	if ((strptr = getenv (name)) != NULL) {
 		ch->phyaddr = simple_strtoul(strptr, &strptr, 10) & 0x1f;
 	}
+	else
+	{
+		ch->phyaddr = VSC8211_ADDR;
+	}
 
 	stat = ethHw_dmaAttach(eth_data);
 	if (stat) {
@@ -2016,7 +2020,11 @@ ethHw_portSpeedCheck(int pidx)
     speed = 1000;
     duplex = 1;
 #endif
-
+#if 0
+printf("get speed =%d,%d\n",speed, duplex);
+speed = 100;
+duplex = 1;
+#endif
 	if (speed) {
 		if (speed == 1000) {
 			if (duplex) {

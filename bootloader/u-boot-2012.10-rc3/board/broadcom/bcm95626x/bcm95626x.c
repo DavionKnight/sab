@@ -71,11 +71,17 @@ void cmicd_init_soc (void) {
 static
 void reset_by_gpio()
 {
-	/*reset phy vsc8211*/
+	/*reset phy vsc8211 by gpio 14*/
 	reg32_write((volatile u32 *)0x1800a008, 0x00004000);
 	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
 	udelay(20000);
 	reg32_write((volatile u32 *)0x1800a004, 0x00004000);
+	reg32_write((volatile u32 *)0x1800a008, 0x00000000);
+	/*reset dpll by gpio15*/
+	reg32_write((volatile u32 *)0x1800a008, 0x00008000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	udelay(20000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00008000);
 	reg32_write((volatile u32 *)0x1800a008, 0x00000000);
 }
 /*****************************************

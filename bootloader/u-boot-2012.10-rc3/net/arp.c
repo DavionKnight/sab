@@ -77,11 +77,13 @@ void arp_raw_request(IPaddr_t sourceIP, const uchar *targetEther,
 	NetWriteIP(&arp->ar_tpa, targetIP);		/* target IP addr */
 
 	arp_len = eth_hdr_size + ARP_HDR_SIZE;
+#if 0
 	if(arp_len <64)
 	{
 		printf("arp len=%d\n", arp_len);
 		arp_len = 66;
 	}
+#endif
 	NetSendPacket(NetArpTxPacket, arp_len);
 }
 

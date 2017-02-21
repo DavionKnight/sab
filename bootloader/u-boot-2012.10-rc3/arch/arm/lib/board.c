@@ -71,6 +71,7 @@ DECLARE_GLOBAL_DATA_PTR;
 ulong monitor_flash_len;
 
 extern int early_access_env_vars(void);
+int mspi_init(void);
 
 #ifdef CONFIG_HAS_DATAFLASH
 extern int  AT91F_DataflashInit(void);
@@ -941,6 +942,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	}
 #endif
 
+	mspi_init();
     printf("========== relocate address: 0x%lx, offset 0x%lx ==========\n",
     		id->relocaddr, id->relocaddr - 0x1e000000);
 

@@ -461,15 +461,16 @@
 #define CONFIG_CMD_LOADB /*add for update by serial port by zhangjiajie*/
 #define CONFIG_PHYLIB /*add vsc8211 phy */
 #define CONFIG_PHY_VITESSE
+#define VSC8211_ADDR	0x5
 
 /*ubi part kernel1 4096,the value 4096 is in MT29F16G08CBACA flash
 when using spansion, change to 2048,and CONFIG_SYS_MALLOC to 0x100000*/
 #define CONFIG_EXTRA_ENV_SETTINGS       \
-"format=mtdparts delall;mtdparts default;saveenv;nand erase.part kernel1;ubi part kernel1 4096;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 4096;ubi create kernel2;nand erase.part application;ubi part application 4096;ubi create home;nand erase.part data;ubi part data 4096;ubi create data; ubi info 1\0" \
+"format=mtdparts delall;mtdparts default;saveenv;nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;nand erase.part application;ubi part application 2048;ubi create home;nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
 "dnu=tftp 0x61000000 u-boot-saber2.bin;sf probe 0;sf erase 0x0 0x200000;\
 sf write 0x61000000 0x0 0x200000\0" \
-"CreateSystem1=nand erase.part kernel1;ubi part kernel1;ubi create kernel1;ubi info 1\0"\
-"CreateSystem2=nand erase.part kernel2;ubi part kernel2;ubi create kernel2;ubi info 1\0"\
+"CreateSystem1=nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;ubi info 1\0"\
+"CreateSystem2=nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;ubi info 1\0"\
 "dnkall=run dnk1;run dnk2;\0" \
 "dnk1=run CreateSystem1;tftp 0x61007fc0 saber2-ubi.fs;ubi write 0x61007fc0 kernel1 $filesize;ubifsmount kernel1;ubifsls;save\0" \
 "dnk2=run CreateSystem2;tftp 0x61007fc0 saber2-ubi.fs;ubi write  0x61007fc0 kernel2 $filesize';ubifsmount kernel2;ubifsls;save\0" \

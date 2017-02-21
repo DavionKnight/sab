@@ -10,6 +10,6 @@
 #  Description    	:
 #
 
-mkfs.ubifs -r ./bin -m 4096 -e 1040384  -c  32 -o saber2-ubi.fs 
+mkfs.ubifs -r ./bin -m 2048 -e 126976  -c  6979 -o saber2-ubi.fs 
 
 cp saber2-ubi.fs /tftpboot/saber2-ubi.fs

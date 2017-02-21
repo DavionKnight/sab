@@ -15,5 +15,6 @@ make saber2-uboot_defconfig
 make clean
 make
 cp output/images/u-boot.bin /mnt/hgfs/D/tmp/u-boot-saber2.bin-2
+cp output/images/u-boot.bin /tftpboot/u-boot-saber2.bin
 echo "cp u-boot-saber2.bin to tftpboot OK"
 
