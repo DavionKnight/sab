@@ -9,6 +9,7 @@
 #  Last Modified      	:2016/07/13 10:11
 #  Description    	:
 #
+mkimage -A arm -O linux -T kernel -n Image -a 0x61008000 -C none -d ./Image ./bin/uImage
 
 mkfs.ubifs -r ./bin -m 2048 -e 126976  -c  6979 -o saber2-ubi.fs 
 
