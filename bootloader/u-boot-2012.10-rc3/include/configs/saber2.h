@@ -463,6 +463,10 @@
 #define CONFIG_PHY_VITESSE
 #define VSC8211_ADDR	0x5
 
+#define CONFIG_CMD_PCI
+#define CONFIG_PCI
+#define CONFIG_IPROC_PCIE
+
 /*ubi part kernel1 4096,the value 4096 is in MT29F16G08CBACA flash
 when using spansion, change to 2048,and CONFIG_SYS_MALLOC to 0x100000*/
 #define CONFIG_EXTRA_ENV_SETTINGS       \
@@ -475,8 +479,8 @@ sf write 0x61000000 0x0 0x200000\0" \
 "dnk1=run CreateSystem1;tftp 0x61007fc0 saber2-ubi.fs;ubi write 0x61007fc0 kernel1 $filesize;ubifsmount kernel1;ubifsls;save\0" \
 "dnk2=run CreateSystem2;tftp 0x61007fc0 saber2-ubi.fs;ubi write  0x61007fc0 kernel2 $filesize';ubifsmount kernel2;ubifsls;save\0" \
 "clrenv=sf probe 0;sf erase 0x200000 0x200000\0" \
-"bootargs=console=ttyS0,115200n8 maxcpus=1 mem=480M\0" \
-"bootcmd=ubi part kernel1 4096;ubifsmount kernel1;ubifsload 0x61007fc0 uImage;ubifsload 0x62007fc0 rootfs;bootm 0x61007fc0 0x62007fc0\0" \   
+"bootargs=initrd=0x62000040,0x8a0c03 root=/dev/ram0 console=ttyS0,115200n8 maxcpus=1 mem=480M\0" \
+"bootcmd=ubi part kernel1 2048;ubifsmount kernel1;ubifsload 0x61007fc0 uImage;ubifsload 0x62000000 rootfs;bootm 0x61007fc0 0x62007fc0\0" \   
 "ethaddr=00:1d:80:01:03:05\0" \   
 "ipaddr=192.168.0.33\0" \   
 "serverip=192.168.0.88\0"

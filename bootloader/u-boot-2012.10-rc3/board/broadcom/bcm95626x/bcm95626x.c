@@ -250,7 +250,7 @@ int board_late_init (void)
 #endif /* STDK_BUILD */
 
 #if !defined(CONFIG_IPROC_NO_DDR) && defined(CONFIG_SHMOO_AND28_REUSE)
-//    save_shmoo_to_flash();
+    save_shmoo_to_flash();
 #endif
 #endif  /* !defined(CONFIG_IPROC_EMULATION) */
 

@@ -392,7 +392,11 @@ chipattach(etc_info_t *etc, void *osh, void *regsva)
 	sprintf(name, "et%dphyaddr", etc->coreunit);
 	var = getvar(NULL, name);
 	if (var == NULL) {
+#if 0  /*modify vsc8211 phy addr to 0x5 by zhangjiajie 2017-2-22*/
 		etc->phyaddr = etc->unit+1;
+#else
+		etc->phyaddr = 0x5;
+#endif
 		ET_ERROR(("et%d: chipattach: getvar(%s) not found set to %d\n", etc->unit, name, etc->phyaddr));
 	} else {
 		etc->phyaddr = bcm_atoi(var) & EPHY_MASK;
