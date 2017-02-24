@@ -842,90 +842,13 @@ int arm5626x_mspi_writeread8( unsigned char *wbuf, int wlen, unsigned char *rbuf
 }
 int arm5626x_mspi_read8( unsigned char *buf, int len)
 {
-    return  mspi_writeread8( NULL, 0, buf, len);
+    return  arm5626x_mspi_writeread8( NULL, 0, buf, len);
 }
 
 int arm5626x_mspi_write8( unsigned char *buf, int len)
 {
-    return  mspi_writeread8(buf, len, NULL, 0);
+    return  arm5626x_mspi_writeread8(buf, len, NULL, 0);
 }
-
-
-
-int mspi_writeread8( unsigned char *wbuf, int wlen, unsigned char *rbuf, int rlen)
-{
-printf("mspi_writeread8 wlen=%d\n",wlen);
-    	int i, tlen, rv = 0;
-    	unsigned char *datptr;
-    	unsigned int rval=0;
-	
-	priv->mspi_spcr0_lsb = 25;
-	priv->mspi_status = 0;
-
-
-    	tlen = wlen + rlen;
-    	if (tlen > 16) {
-        	return -1;
-    	}
-
-    	if ((wbuf != NULL) && (wlen > 0)) {
-        	datptr = wbuf;
-        	for (i=0; i<wlen; i++) {
-            	/* Use only Even index of TXRAM for 8 bit xmit */
-		priv->mspi_txram[2*i] = (unsigned int) *datptr;
-
-            	datptr++;
-        	}
-    	}
-
-    	for (i=0; i<tlen; i++) {
-        	/* Release CS ony on last byute */
-		priv->mspi_cdram[i] = (i == (tlen-1) ? 0 : 0x80);
-    	}
-
-    	/* Set queue pointers */
-	priv->mspi_newqp = 0;
-	priv->mspi_endqp = tlen-1;
-
-    	/* Start SPI transfer */
-    	rval = 0x40; /* SPE=1, SPIFIE=WREN=WRT0=LOOPQ=HIE=HALT=0 */
-	priv->mspi_spcr2 = rval;
-
-	rv = -1;
-	for(i=0; i<0xffff; i++)
-	{
-		rval = priv->mspi_status;
-		if(i== 0xfff) printf("mspi_status = %x\n", rval);
-		if(rval & 0x01) 
-		{
-			rv = 0;
-//			printf("spi read ok i=%x\n", i);
-			break;
-		}
-	}
-		
-
-    	if (rv != 0) {
-        	return -1;
-    	}
-
-    if ((rbuf != NULL) && (rlen > 0)) {
-        datptr = rbuf;
-        for (i=wlen; i<tlen; i++) {
-            /* Use only Odd index of TXRAM for 8 bit Recv */
-            *datptr = ((unsigned char) priv->mspi_rxram[2*i+1] & 0xff);
-            datptr++;
-        }
-    }
-    return 0;
-}
-
-
-
-
-
-
-
 
 #endif
 

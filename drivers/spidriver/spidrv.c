@@ -435,11 +435,11 @@ printf("spidrv_read txlen=%d\n",txlen);
 		txlen = 4; /*181和2000时序不同，txlen统一用的3，这里需要4*/
 	}
 #endif
-	printf("txbuf[0]=0x%02x,txbuf[1]=0x%02x,txbuf[2]=0x%02x,txlen=0x%02x,rxlen=0x%02x\n",
-txbuf[0],txbuf[1],txbuf[2],txlen,rxlen);
+	//printf("txbuf[0]=0x%02x,txbuf[1]=0x%02x,txbuf[2]=0x%02x,txlen=0x%02x,rxlen=0x%02x\n",txbuf[0],txbuf[1],txbuf[2],txlen,rxlen);
 	gpio_direction_output(spi->chip_select, 0);
 	arm5626x_mspi_writeread8(txbuf,txlen,buf,rxlen); 
 	gpio_direction_input(spi->chip_select);
+
 	memcpy(rxbuf, buf, rxlen);
 
 	return 0;
@@ -471,9 +471,9 @@ int spidrv_write(unsigned char *txbuf, int txlen, int rxlen, unsigned char chip_
 	}
 #endif
 
-	len = txlen;
-
+	gpio_direction_output(spi->chip_select, 0);
 	arm5626x_mspi_write8(txbuf, txlen);
+	gpio_direction_input(spi->chip_select);
 
 	return 0;
 }
