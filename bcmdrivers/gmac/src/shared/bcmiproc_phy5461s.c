@@ -67,6 +67,7 @@ phy5461_wr_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
 	//printf("%s phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x) data(0x%x)\n",
 	//	 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr, wr_data);
 
+#if 0
     if (flags & SOC_PHY_REG_1000X) {
         if (reg_addr <= 0x000f) {
             uint16 blk_sel;
@@ -108,18 +109,21 @@ phy5461_wr_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
             }
             break;
         default:
+#endif
             if (!(flags & SOC_PHY_REG_RESERVE_ACCESS)) {
                 /* Must not write to reserved registers */ 
-                if (reg_addr > 0x001e) {
+                if (reg_addr > 0x001f) {
                     rv = SOC_E_PARAM;
                 }
             }
+#if 0
             break;
         }
         if (SOC_SUCCESS(rv)) {
 			ccb_mii_write(MII_DEV_EXT, phyaddr, reg_addr, wr_data);
         }
     } 
+#endif
     if (SOC_FAILURE(rv)) {
 		NET_ERROR(("%s ERROR phyaddr(0x%x) reg_bank(0x%x) reg_addr(0x%x) rv(%d)\n",
 				 __FUNCTION__, phyaddr, reg_bank, reg_addr, rv));
@@ -138,6 +142,7 @@ phy5461_rd_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
 
 	NET_REG_TRACE(("%s going to read phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x)\n",
 			 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr));
+#if 0
     if (flags & SOC_PHY_REG_1000X) {
         if (reg_addr <= 0x000f) {
             uint16 blk_sel;
@@ -175,12 +180,14 @@ phy5461_rd_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
             }
             break;
         default:
+#endif
             if (!(flags & SOC_PHY_REG_RESERVE_ACCESS)) {
                 /* Must not read from reserved registers */ 
-                if (reg_addr > 0x001e) {
+                if (reg_addr > 0x001f) {
                    rv = SOC_E_PARAM;
                 }
             }
+#if 0
             break;
         }
         if (SOC_SUCCESS(rv)) {
@@ -189,6 +196,7 @@ phy5461_rd_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
 					 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr, *data));
         }
     } 
+#endif
     if (SOC_FAILURE(rv)) {
 		NET_ERROR(("%s ERROR phyaddr(0x%x) reg_bank(0x%x) reg_addr(0x%x) rv(%d)\n",
 				 __FUNCTION__, phyaddr, reg_bank, reg_addr, rv));
@@ -469,15 +477,57 @@ int
 phy5461_init(uint eth_num, uint phyaddr)
 {
 	uint16	phyid0, phyid1;
+	uint16	val = 0;
 
-	NET_TRACE(("et%d: %s: phyaddr %d\n", eth_num, __FUNCTION__, phyaddr));
+	printf("et%d: %s: phyaddr %d\n", eth_num, __FUNCTION__, phyaddr);
 
 	phy5461_rd_reg(eth_num, phyaddr, PHY_MII_PHY_ID0r_FLAGS, PHY_MII_PHY_ID0r_BANK, PHY_MII_PHY_ID0r_ADDR, &phyid0);
 	phy5461_rd_reg(eth_num, phyaddr, PHY_MII_PHY_ID1r_FLAGS, PHY_MII_PHY_ID1r_BANK, PHY_MII_PHY_ID1r_ADDR, &phyid1);
 
 	printf("%s Phy ChipID: 0x%04x:0x%04x\n", __FUNCTION__, phyid1, phyid0);
 
+#if 0
 	phy5461_reset_setup(eth_num, phyaddr);
+#else
+	val = 0x2a30;	
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+	val = 0x0212;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x8, &val);
+	udelay(1000);
+	val = 0x32b5;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+	val = 0xf;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x2, &val);
+	udelay(1000);
+	val = 0x472a;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1, &val);
+	udelay(1000);
+	val = 0x8fa4;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
+	udelay(1000);
+	val = 0x2a30;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+	val = 0x12;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x8, &val);
+	udelay(1000);
+	val = 0;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+	udelay(1000);
+
+	val = 0x4101;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1e, &val);
+	udelay(1000);
+	val = 0x1940;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
+	udelay(1000);
+	val = 0x1140;
+	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
+	printf("vsc8211 init done!\n");
+	
+#endif
 
 	return 0;
 }

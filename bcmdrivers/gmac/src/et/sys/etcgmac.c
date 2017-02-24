@@ -2160,7 +2160,7 @@ chipphyreset(ch_t *ch, uint phyaddr)
 	}
 
 	ET_TRACE(("et%d: chipphyreset: phyaddr %d\n", ch->etc->unit, phyaddr));
-
+#if 0
 #if (defined(CONFIG_MACH_HX4) || defined(CONFIG_MACH_KT2) || defined(CONFIG_MACH_SB2))
     chipphywr(ch, phyaddr, 0, CTL_RESET);
     OSL_DELAY(100);
@@ -2177,6 +2177,8 @@ chipphyreset(ch_t *ch, uint phyaddr)
 #endif /* defined(CONFIG_MACH_HR2) */
 
 	chipphyinit(ch, phyaddr);
+#else
+#endif
 }
 
 static void
@@ -2188,7 +2190,9 @@ chipphyinit(ch_t *ch, uint phyaddr)
 	ET_TRACE(("et%d: chipphyinit: phyaddr %d\n", ch->etc->unit, phyaddr));
 #if (defined(CONFIG_MACH_HX4) || defined(CONFIG_MACH_KT2) || defined(CONFIG_MACH_SB2))
 	phy5461_init(ch->etc->unit, phyaddr);
+#if 0 /*delete by zhangjiajie 2017-2-22*/
 	serdes_init(ch->etc->unit, phyaddr);
+#endif
 #elif defined(CONFIG_MACH_HR2)
 	phy5221_init(ch->etc->unit, phyaddr);
 #elif defined(CONFIG_MACH_GH) || defined(CONFIG_MACH_HR3)
