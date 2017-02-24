@@ -63,11 +63,11 @@ ifconfig lo 127.0.0.1
 
 tftp_cliet_ip=192.168.1.1
 tftp_server_ip=192.168.1.254
+/sbin/ifconfig eth0  ${tftp_cliet_ip}
 if [ ! -f /home/bin/autorun.sh ]
 then
         cd /root
         echo "download applicaion..."
-        /sbin/ifconfig eth0  ${tftp_cliet_ip}
         sleep 3
         tftp -g -r tftp_1st.sh ${tftp_server_ip}
         if [ ! -f tftp_1st.sh ]

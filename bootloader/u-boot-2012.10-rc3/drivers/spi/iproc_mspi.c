@@ -7,6 +7,8 @@
 
 #include <common.h>
 #include <malloc.h>
+#include "asm/iproc/reg_utils.h"
+#include "asm/iproc/iproc_common.h"
 
 /* Chip attributes */
 #define MSPI_REG_BASE                       0x03201500
@@ -194,6 +196,7 @@ int dpll_spi_read_driver(unsigned short addr, unsigned char *data, size_t count)
 	unsigned char rxbuf[16] = {0};
 	int i = 0;
 
+	mspi_cs_set(1, 1);
 //	for(i=0;i<count;i++)
 //	{
 		address = (addr<<1)&0x7ffe;
@@ -220,6 +223,8 @@ int dpll_spi_read_driver(unsigned short addr, unsigned char *data, size_t count)
 		printf(" 0x%02x",rxbuf[i]);
 	printf("\n");
 
+	mspi_cs_set(1, 0);
+	return 0;
 }
 int dpll_spi_write_driver(unsigned short addr, unsigned char *data, size_t count)
 {
@@ -228,6 +233,7 @@ int dpll_spi_write_driver(unsigned short addr, unsigned char *data, size_t count
 	unsigned char rxbuf[16] = {0};
 	int i = 0;
 
+	mspi_cs_set(1, 1);
 //	for(i=0;i<count;i++)
 //	{
 		address = (addr<<1)&0x7ffe;
@@ -244,12 +250,39 @@ int dpll_spi_write_driver(unsigned short addr, unsigned char *data, size_t count
 //		mspi_writeread8(txbuf, count+2, rxbuf, 2);
 		mspi_write8(txbuf, count+2);
 //	}
+	mspi_cs_set(1, 0);
 	return 0;
 }
 void dpll_spi_write(unsigned short addr, unsigned char data)
 {
 
 	dpll_spi_write_driver(addr, &data, 1);
+}
+#define GPIO_BASE	0x1800a000
+#define GPIO_OUTEN	((volatile unsigned int *)0x1800a008)
+#define GPIO_VALUE	((volatile unsigned int *)0x1800a004)
+void mspi_cs_set(unsigned char cs, unsigned char en)
+{
+	unsigned int val = 0;
+	
+	if(cs > 2)
+	{
+		printf("mspi_cs_set cs =%d err\n",cs);
+		return;
+	}
+	/*set value*/
+	val = reg32_read(GPIO_VALUE);	
+	val = en? val&( ~(1<<cs)):val|(1<<cs);	
+	reg32_write(GPIO_VALUE, val);
+
+	/*set directory*/
+	val = reg32_read(GPIO_OUTEN);	
+	val &= ~0x7;
+	val = en? val|(1<<cs):val;	
+	reg32_write(GPIO_OUTEN, val);
+
+	return;
+	
 }
 void dpll_init_pre()
 {
