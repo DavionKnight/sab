@@ -145,7 +145,7 @@
 #else
 #define CONFIG_DDR_BYTES_PER_COL            2
 #endif
-#define CONFIG_SYS_MALLOC_LEN               0x400000 /*modify from 0x4000 for ubi compile by zhangjiajie*/
+#define CONFIG_SYS_MALLOC_LEN               0x100000 /*modify from 0x4000 for ubi compile by zhangjiajie*/
 #define CONFIG_PHYS_SDRAM_0                 CONFIG_IPROC_SRAM_BASE
 #define CONFIG_PHYS_SDRAM_1                 0x60000000
 #define CONFIG_PHYS_SDRAM_1_SIZE            (CONFIG_DDR_TOTAL_COLS * CONFIG_DDR_BYTES_PER_COL)

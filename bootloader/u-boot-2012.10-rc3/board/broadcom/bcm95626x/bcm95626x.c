@@ -83,6 +83,7 @@ void reset_by_gpio()
 	udelay(20000);
 	reg32_write((volatile u32 *)0x1800a004, 0x00008000);
 	reg32_write((volatile u32 *)0x1800a008, 0x00000000);
+	printf("reset vsc8211, ds31400 done\n");
 }
 /*****************************************
  * board_init -early hardware init

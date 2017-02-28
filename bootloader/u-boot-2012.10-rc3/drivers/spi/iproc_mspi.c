@@ -10,6 +10,25 @@
 #include "asm/iproc/reg_utils.h"
 #include "asm/iproc/iproc_common.h"
 
+/*add by zhangjiajie 2017-2-27*/
+static
+void reset_by_gpio2()
+{
+	/*reset bcm5482 by gpio11, gpio12*/
+	reg32_write((volatile u32 *)0x1800a008, 0x00001800);
+	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	udelay(20000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00001800);
+	reg32_write((volatile u32 *)0x1800a008, 0x00001800);
+	/*reset fpga by gpio13*/
+	reg32_write((volatile u32 *)0x1800a008, 0x00002000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	udelay(20000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00002000);
+	reg32_write((volatile u32 *)0x1800a008, 0x00002000);
+	printf("reset bcm5482, fpga done\n");
+}
+
 /* Chip attributes */
 #define MSPI_REG_BASE                       0x03201500
 #define CMIC_OVERRIDE_STRAP		    0x3210234
@@ -48,7 +67,7 @@ int mspi_init(void)
 {
 	u32 rval;
 	u32 *ptr;
-	
+udelay(1000000);	
 	ptr = (u32*)CMIC_OVERRIDE_STRAP;
 	priv =	 (volatile struct mspi_hw *)(MSPI_REG_BASE + 0x000);
 
@@ -75,7 +94,9 @@ int mspi_init(void)
 
 	dpll_init_pre();	
 	atest();
-		
+
+	reset_by_gpio2();	
+
 	return 0;
 
 }
@@ -288,6 +309,7 @@ void dpll_init_pre()
 {
 	printf("dpll init ...");
 	mspi_config(1,1);
+	udelay(1000000);
 
 	dpll_spi_write( 0x0006, 0x80);
 	udelay(1000000);

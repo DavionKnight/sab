@@ -40,7 +40,7 @@ mkdir /data
 
 ubiattach /dev/ubi_ctrl -m 0  
 mount -t ubifs /dev/ubi0_0 /os1/
-ubiattach /dev/ubi_ctrl -m 2  
+ubiattach /dev/ubi_ctrl -m 1  
 mount -t ubifs /dev/ubi1_0 /os2/
 ubiattach /dev/ubi_ctrl -m 3  
 mount -t ubifs /dev/ubi2_0 /home/
