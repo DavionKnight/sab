@@ -362,6 +362,7 @@ gmac_speed(bcm_eth_t *eth_data, uint32_t speed)
 #endif
 
 	if (cmdcfg != ocmdcfg) {
+		serdes_init(speed); /*mac config update add by zhangjiajie 2017-3-1*/
 		/* Put mac in reset */
 		gmac_init_reset(eth_data);
 		/* Write command config reg */
@@ -1651,7 +1652,7 @@ ethHw_chipAttach(bcm_eth_t *eth_data)
 ch->phyaddr &= 0xf;
 	gmac_serdes_init(eth_data);
 	phy5461_init(ch->phyaddr);
-	//serdes_init(ch->phyaddr);
+	//serdes_init(2);
 #elif defined(CONFIG_HURRICANE2)
 	phy5221_init(ch->phyaddr);
 	phy5221_enable_set(ch->phyaddr, 1);

@@ -14,18 +14,20 @@
 static
 void reset_by_gpio2()
 {
-	/*reset bcm5482 by gpio11, gpio12*/
-	reg32_write((volatile u32 *)0x1800a008, 0x00001800);
-	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
-	udelay(20000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00001800);
-	reg32_write((volatile u32 *)0x1800a008, 0x00001800);
 	/*reset fpga by gpio13*/
+#if 0
 	reg32_write((volatile u32 *)0x1800a008, 0x00002000);
 	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
 	udelay(20000);
 	reg32_write((volatile u32 *)0x1800a004, 0x00002000);
 	reg32_write((volatile u32 *)0x1800a008, 0x00002000);
+#endif
+	/*reset bcm5482&fpga by gpio11, gpio12*/
+	reg32_write((volatile u32 *)0x1800a008, 0x00003800);
+	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	udelay(20000);
+	reg32_write((volatile u32 *)0x1800a004, 0x00003800);
+	reg32_write((volatile u32 *)0x1800a008, 0x00003800);
 	printf("reset bcm5482, fpga done\n");
 }
 

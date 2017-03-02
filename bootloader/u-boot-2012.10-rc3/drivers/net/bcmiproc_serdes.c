@@ -313,19 +313,25 @@ serdes_start_pll(uint phyaddr)
  *      0
  */
 int
-serdes_init(uint phyaddr)
+serdes_init(uint speed)
 {
 #if defined(CONFIG_SABER2)
 
+	unsigned int	phyaddr = 1;
 
-
-    /* Auto Negotiation 10M/100M/1G ¡V SGMII Slave */
+    /* Auto Negotiation 10M/100M/1G ?V SGMII Slave */
     chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x001f, 0x8000);
     chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x0010, 0x0c2f);
     chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x001f, 0x8300);
     chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x0010, 0x0100);
     chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x001f, 0x8000);
-    chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x0000, 0x1140);
+
+	printf("speed=%d\n",speed);
+    if(2 == speed)/*2=1000M update mac set  by zhangjiajie 2017-3-1*/
+	    chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x0000, 0x0140);
+    else
+	    chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x0000, 0x2100);
+
     chip_phy_wr(SERDES_INTERNAL, phyaddr, 0x0010, 0x2c3f);
 #else
 	uint16		data16;
