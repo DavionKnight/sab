@@ -119,11 +119,11 @@ phy5461_wr_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
 #if 0
             break;
         }
+#endif
         if (SOC_SUCCESS(rv)) {
 			ccb_mii_write(MII_DEV_EXT, phyaddr, reg_addr, wr_data);
         }
-    } 
-#endif
+//    } 
     if (SOC_FAILURE(rv)) {
 		NET_ERROR(("%s ERROR phyaddr(0x%x) reg_bank(0x%x) reg_addr(0x%x) rv(%d)\n",
 				 __FUNCTION__, phyaddr, reg_bank, reg_addr, rv));
@@ -190,13 +190,13 @@ phy5461_rd_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank,
 #if 0
             break;
         }
+#endif
         if (SOC_SUCCESS(rv)) {
 			ccb_mii_read(MII_DEV_EXT, phyaddr, reg_addr, data);
 			NET_REG_TRACE(("%s rd phyaddr(0x%x) flags(0x%x) reg_bank(0x%x) reg_addr(0x%x) data(0x%x)\n",
 					 __FUNCTION__, phyaddr, flags, reg_bank, reg_addr, *data));
         }
-    } 
-#endif
+//    } 
     if (SOC_FAILURE(rv)) {
 		NET_ERROR(("%s ERROR phyaddr(0x%x) reg_bank(0x%x) reg_addr(0x%x) rv(%d)\n",
 				 __FUNCTION__, phyaddr, reg_bank, reg_addr, rv));

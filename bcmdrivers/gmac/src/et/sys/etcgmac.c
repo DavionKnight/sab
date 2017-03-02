@@ -43,6 +43,8 @@
 #include <bcmenetrxh.h>
 #include <bcmgmacrxh.h>
 #include <mach/iproc_regs.h>
+#include <linux/netlink.h>
+#include <net/sock.h>
 
 #if defined(CONFIG_MACH_HX4)
 #include "mach/socregs_ing_open.h"
@@ -836,6 +838,8 @@ gmac_speed(ch_t *ch, uint32 speed)
 
 	cmdcfg = R_REG(ch->osh, &ch->regs->cmdcfg);
 
+	serdes_init(0, speed); /*mac config update add by zhangjiajie 2017-3-1*/
+
 	/* put mac in reset */
 	gmac_init_reset(ch);
 
@@ -1308,6 +1312,169 @@ gmac_mf_cleanup(ch_t *ch)
 	}
 }
 
+static struct timer_list link_scan_timer;
+unsigned char outband_link_status = 0;
+
+struct sock *netlink_sock;
+
+#ifndef GROUP_MASK 
+#define GROUP_MASK 3
+#endif
+
+struct message_info {
+        unsigned char port; /* 0: outband port*/
+        unsigned char status; /* 1: linkup, 0:linkdown */
+        unsigned char speed;  /* 1: 10M, 2: 100M, 3:1000M */
+        unsigned char duplex; /* current duplex: 0=half, 1=full */
+};
+
+struct message_info link_sock_mes;
+extern struct sock *netlink_sock;
+
+/*
+extern unsigned long  linkstatus_callback_funcs;
+#define LINKSTATUS_FUNC_MAP(func) (linkstatus_callback_funcs=(unsigned long)func)
+#define LINKSTATUS_FUNC_CALL(func_type) ((func_type)(linkstatus_callback_funcs))        
+typedef int*( *linkstatus_callbak_func) (int,int,int,int);
+*/
+
+extern void  linkstatus_register_callback(  int *call_back );
+
+
+static void recv_sock_handler(struct sk_buff * sk)
+{
+  printk("start to recv_handler()....\n");
+
+  //wake_up(sk->sk->sk_sleep);  
+}
+
+
+int linkstatus_change(int port,int speed,int status,int duplex)
+{
+        struct sk_buff * skb0 = NULL;
+        struct nlmsghdr * nlhdr = NULL;
+        int myspeed=0;
+        //printk("port=%d speed=%d status=%d duplex=%d\n",port,speed,status,duplex);
+        if(speed == 10)
+                myspeed = 1;
+        else if(speed == 100)
+                myspeed = 2;
+        else if(speed == 1000)
+                myspeed = 3;
+
+        skb0 = alloc_skb(64, GFP_KERNEL);
+        if(skb0)
+        {
+                nlhdr = nlmsg_put(skb0, 0, 0, 0, 64-sizeof(*nlhdr), 0);
+
+                link_sock_mes.port = 0;
+                link_sock_mes.speed= myspeed;
+                link_sock_mes.status=status;
+                link_sock_mes.duplex=duplex;
+
+                memcpy(NLMSG_DATA(nlhdr), (unsigned char*)&link_sock_mes.port, 4);
+
+                nlhdr->nlmsg_len = NLMSG_LENGTH(4);
+                nlhdr->nlmsg_pid = 0;
+                nlhdr->nlmsg_flags= 0;
+
+                NETLINK_CB(skb0).pid = 0;
+                NETLINK_CB(skb0).dst_group = GROUP_MASK;
+
+
+                netlink_broadcast(netlink_sock, skb0, 0, GROUP_MASK, GFP_KERNEL);
+
+        }
+        else
+        {
+                printk("Error to malloc nlhdr...\n");
+                return 0;
+        }
+        return 1;
+
+        nlmsg_failure:
+        if(skb0 != 0)
+                        kfree_skb(skb0);
+        return 0;
+}
+
+int genphy_read_link(unsigned char *link_status)
+{
+        unsigned short value = 0;
+        int ret = 0;
+
+        ret = phy5461_rd_reg(0, 0x5, 0, 0, 1, &value);
+        if(ret < 0)
+                return ret;
+        ret = phy5461_rd_reg(0, 0x5, 0, 0, 1, &value);
+        if(ret < 0)
+                return ret;
+        if ((value & 0x4) == 0)
+                *link_status = 0;
+        else
+                *link_status = 1;
+        return 0;
+}
+
+void outband_phy_link_status_scan(unsigned long data)
+{
+        unsigned char link_status = 0;
+	int speed = 0, duplex = 0;
+
+	ch_t *ch = (ch_t *)data;
+
+        genphy_read_link(&link_status);
+
+        if(outband_link_status != link_status)
+        {
+                outband_link_status = link_status;
+		linkstatus_change(0, 0, link_status, 0);
+
+		/*if phy linked, mac should check phy status and setup itself add by zhangjiajie 2017-3-2*/
+		if(1 == link_status)
+		{
+			phy5461_speed_get(0, 0x5, &speed, &duplex);
+			if(1000 == speed)
+			{
+				gmac_speed(ch, 5);
+				serdes_init(0, 2);
+			}
+			else
+			{
+				gmac_speed(ch, 3);
+				serdes_init(0, 1);
+			}
+		}
+		              printk("link status change:%d,speed:%d\n",link_status,speed);
+	}
+
+	link_scan_timer.expires = jiffies+(HZ*1);
+	link_scan_timer.data = (unsigned long)ch;
+        add_timer(&link_scan_timer);
+}
+
+
+int outband_init(ch_t *ch)    
+{  
+	struct netlink_kernel_cfg cfg = {
+		.input	= recv_sock_handler,
+	};
+
+        printk("start to outband_init()...ver1.00\n");
+        init_timer(&link_scan_timer);
+   
+        link_scan_timer.function = outband_phy_link_status_scan;  
+        printk("HZ=%d\n",HZ);                            
+        link_scan_timer.expires = jiffies + (HZ * 1);
+	link_scan_timer.data = (unsigned long)ch;
+        add_timer(&link_scan_timer);   
+        
+        netlink_sock = netlink_kernel_create(&init_net, NETLINK_OUTBAND, THIS_MODULE, &cfg);
+        if (!netlink_sock) {
+                printk("Fail to create netlink_sock socket.....\n");
+        }
+        return 0;
+}
 /*
  * Initialize all the chip registers.  If dma mode, init tx and rx dma engines
  * but leave the devcontrol tx and rx (fifos) disabled.
@@ -1405,7 +1572,16 @@ chipinit(ch_t *ch, uint options)
     
 	/* turn on the emac */
 	gmac_enable(ch);
+
+	static int once = 0;
+	printf("etc->phyaddr = %d\n",etc->phyaddr);
+	if((0x5 == etc->phyaddr)&&(0 == once))
+	{
+		outband_init(ch);
+		once = 1;
+	}
 }
+
 
 /* dma transmit */
 static bool BCMFASTPATH

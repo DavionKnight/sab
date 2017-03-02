@@ -319,20 +319,25 @@ serdes_start_pll(uint eth_num, uint phyaddr)
  *      0
  */
 int
-serdes_init(uint eth_num, uint phyaddr)
+serdes_init(uint eth_num, uint speed)
 {
 #if defined(CONFIG_MACH_SB2)
 
+	unsigned int phyaddr = 1;
+	
 
-
-
-    /* Auto Negotiation 10M/100M/1G ¡V SGMII Slave */
+    /* Auto Negotiation 10M/100M/1G ?V SGMII Slave */
     ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x001f, 0x8000);
     ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x0010, 0x0c2f);
     ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x001f, 0x8300);
     ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x0010, 0x0100);
     ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x001f, 0x8000);
-    ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x0000, 0x1140);
+
+    if(1 == speed)
+	    ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x0000, 0x2100);
+    else
+	    ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x0000, 0x0140);
+
     ccb_mii_write(MII_DEV_LOCAL, phyaddr, 0x0010, 0x2c3f);
   
 #else
