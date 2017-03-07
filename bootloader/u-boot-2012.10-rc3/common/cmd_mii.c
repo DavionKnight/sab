@@ -282,6 +282,71 @@ static void extract_range(
 	}
 }
 
+static int do_mspi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	char		op[2];
+	unsigned char	addrlo, addrhi, reglo, reghi;
+	unsigned char	addr, reg;
+	unsigned short	data;
+	int		rcode = 0;
+	const char	*devname;
+
+	if (argc < 2)
+		return CMD_RET_USAGE;
+
+//	mii_init ();
+
+	if ((flag & CMD_FLAG_REPEAT) == 0) {
+		op[0] = argv[1][0];
+		if (strlen(argv[1]) > 1)
+			op[1] = argv[1][1];
+		else
+			op[1] = '\0';
+
+		if (argc >= 3)
+			extract_range(argv[2], &addrlo, &addrhi);
+		if (argc >= 4)
+			extract_range(argv[3], &reglo, &reghi);
+		if (argc >= 5)
+			data = simple_strtoul (argv[4], NULL, 16);
+	}
+
+
+	/*
+	 * check info/read/write.
+	 */
+	if (op[0] == 'r') {
+		for (addr = addrlo; addr <= addrhi; addr++) {
+			data = 0xffff;
+			dpll_spi_read_driver(addr, &data, 2);
+			printf("addr=%02x reg=%02x data=",
+					(uint)addr, (uint)reg);
+			printf("%04X\n", data & 0x0000FFFF);
+		}
+		if ((addrlo != addrhi) && (reglo != reghi))
+			printf("\n");
+	}
+	else if (op[0] == 'w') {
+	for (addr = addrlo; addr <= addrhi; addr++) {
+			dpll_spi_write_driver(addr, &data, 1);
+		}
+	} else {
+		return CMD_RET_USAGE;
+	}
+
+	/*
+	 * Save the parameters for repeats.
+	 */
+	last_op[0] = op[0];
+	last_op[1] = op[1];
+	last_addr_lo = addrlo;
+	last_addr_hi = addrhi;
+	last_reg_lo  = reglo;
+	last_reg_hi  = reghi;
+	last_data    = data;
+
+	return rcode;
+}
 /* ---------------------------------------------------------------- */
 static int do_mii(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
@@ -450,3 +515,11 @@ U_BOOT_CMD(
 	"mii dump   <addr> <reg>        - pretty-print <addr> <reg> (0-5 only)\n"
 	"Addr and/or reg may be ranges, e.g. 2-7."
 );
+
+U_BOOT_CMD(
+	mspi,	5,	1,	do_mspi,
+	"MSPI r/w commands",
+	"mspi read   <addr>        - read dpll <addr>\n"
+	"mspi write  <addr> - write dpll <addr> \n"
+);
+

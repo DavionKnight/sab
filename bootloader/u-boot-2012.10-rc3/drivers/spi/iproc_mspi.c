@@ -10,24 +10,26 @@
 #include "asm/iproc/reg_utils.h"
 #include "asm/iproc/iproc_common.h"
 
+extern void bcmgpio_directory_output(int gpio, unsigned char val);
+extern void bcmgpio_directory_input(int gpio);
+extern unsigned int bcmgpio_get_value(int gpio);
+
 /*add by zhangjiajie 2017-2-27*/
 static
 void reset_by_gpio2()
 {
 	/*reset fpga by gpio13*/
-#if 0
-	reg32_write((volatile u32 *)0x1800a008, 0x00002000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	bcmgpio_directory_output(13, 0);
 	udelay(20000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00002000);
-	reg32_write((volatile u32 *)0x1800a008, 0x00002000);
-#endif
-	/*reset bcm5482&fpga by gpio11, gpio12*/
-	reg32_write((volatile u32 *)0x1800a008, 0x00003800);
-	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	bcmgpio_directory_output(13, 1);
+
+	/*reset bcm5482 by gpio11, gpio12*/
+	bcmgpio_directory_output(11, 0);
+	bcmgpio_directory_output(12, 0);
 	udelay(20000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00003800);
-	reg32_write((volatile u32 *)0x1800a008, 0x00003800);
+	bcmgpio_directory_output(11, 1);
+	bcmgpio_directory_output(12, 1);
+
 	printf("reset bcm5482, fpga done\n");
 }
 
@@ -63,13 +65,35 @@ struct mspi_hw {
     u32             cmim_bspi_busy_status;        /* 0x184 */
 };
 
+int wait_fpga_load_done()
+{
+	bcmgpio_directory_input(6);
+	return bcmgpio_get_value(6);
+}
+
 struct mspi_hw *priv;
 
 int mspi_init(void)
 {
 	u32 rval;
 	u32 *ptr;
-udelay(1000000);	
+	
+	printf("wait fpga load...\n");
+
+	int i = 0;
+
+	do{
+
+	i++;
+
+	if((i>200)||(wait_fpga_load_done()))
+	break;
+
+	udelay(100000);	
+
+	}while(1);	
+	printf("%s\n",i>200?"failed":"successfully");
+
 	ptr = (u32*)CMIC_OVERRIDE_STRAP;
 	priv =	 (volatile struct mspi_hw *)(MSPI_REG_BASE + 0x000);
 
@@ -188,7 +212,8 @@ int mspi_writeread8( u8 *wbuf, int wlen, u8 *rbuf, int rlen)
 	}
 		
 
-    	if (rv != 0) {
+	if (rv != 0) {
+		printf("mspi_writeread8 err rv=%d\n",rv);
         	return -1;
     	}
 
@@ -219,7 +244,7 @@ int dpll_spi_read_driver(unsigned short addr, unsigned char *data, size_t count)
 	unsigned char rxbuf[16] = {0};
 	int i = 0;
 
-	mspi_cs_set(1, 1);
+	mspi_cs_set(1, 0);
 //	for(i=0;i<count;i++)
 //	{
 		address = (addr<<1)&0x7ffe;
@@ -246,7 +271,7 @@ int dpll_spi_read_driver(unsigned short addr, unsigned char *data, size_t count)
 		printf(" 0x%02x",rxbuf[i]);
 	printf("\n");
 
-	mspi_cs_set(1, 0);
+	mspi_cs_set(1, 1);
 	return 0;
 }
 int dpll_spi_write_driver(unsigned short addr, unsigned char *data, size_t count)
@@ -256,7 +281,7 @@ int dpll_spi_write_driver(unsigned short addr, unsigned char *data, size_t count
 	unsigned char rxbuf[16] = {0};
 	int i = 0;
 
-	mspi_cs_set(1, 1);
+	mspi_cs_set(1, 0);
 //	for(i=0;i<count;i++)
 //	{
 		address = (addr<<1)&0x7ffe;
@@ -273,7 +298,7 @@ int dpll_spi_write_driver(unsigned short addr, unsigned char *data, size_t count
 //		mspi_writeread8(txbuf, count+2, rxbuf, 2);
 		mspi_write8(txbuf, count+2);
 //	}
-	mspi_cs_set(1, 0);
+	mspi_cs_set(1, 1);
 	return 0;
 }
 void dpll_spi_write(unsigned short addr, unsigned char data)
@@ -293,16 +318,7 @@ void mspi_cs_set(unsigned char cs, unsigned char en)
 		printf("mspi_cs_set cs =%d err\n",cs);
 		return;
 	}
-	/*set value*/
-	val = reg32_read(GPIO_VALUE);	
-	val = en? val&( ~(1<<cs)):val|(1<<cs);	
-	reg32_write(GPIO_VALUE, val);
-
-	/*set directory*/
-	val = reg32_read(GPIO_OUTEN);	
-	val &= ~0x7;
-	val = en? val|(1<<cs):val;	
-	reg32_write(GPIO_OUTEN, val);
+	bcmgpio_directory_output(cs, en);
 
 	return;
 	
@@ -311,7 +327,7 @@ void dpll_init_pre()
 {
 	printf("dpll init ...");
 	mspi_config(1,1);
-	udelay(1000000);
+	udelay(500000);
 
 	dpll_spi_write( 0x0006, 0x80);
 	udelay(1000000);
@@ -326,125 +342,13 @@ void dpll_init_pre()
 	dpll_spi_write( 0x03E4, 0x98);
 	dpll_spi_write( 0x03E5, 0x04);
 	dpll_spi_write( 0x03E5, 0x00);
-#if 0
-	/*# Output APLL1*/
-	dpll_spi_write( 0x00C0, 0x01);
-	/*# Enable Noise Shapping*/
-	dpll_spi_write( 0x00D3, 0x03);
-	dpll_spi_write( 0x00D4, 0x40);
-	dpll_spi_write( 0x00D6, 0x3F);
-	dpll_spi_write( 0x00D7, 0x0F);
-	dpll_spi_write( 0x00D8, 0x87);
-	dpll_spi_write( 0x00D9, 0x08);
-
-	/*# Output APLL2*/
-	dpll_spi_write( 0x00C0, 0x02);
-	/*# Enable Noise Shapping*/
-	dpll_spi_write( 0x00D3, 0x03);
-	dpll_spi_write( 0x00D4, 0x40);
-	dpll_spi_write( 0x00D6, 0x3F);
-	dpll_spi_write( 0x00D7, 0x0F);
-	dpll_spi_write( 0x00D8, 0x87);
-	dpll_spi_write( 0x00D9, 0x08);
-
-	/*# Output APLL3*/
-	dpll_spi_write( 0x00C0, 0x03);
-
-	/*# Enable Noise Shapping*/
-	dpll_spi_write( 0x00D3, 0x03);
-	dpll_spi_write( 0x00D4, 0x40);
-	dpll_spi_write( 0x00D6, 0x3F);
-	dpll_spi_write( 0x00D7, 0x0F);
-	dpll_spi_write( 0x00D8, 0x87);
-	dpll_spi_write( 0x00D9, 0x08);
-
-	/*## Configure the DS31400 to use a 19.44MHz MCLKOSC
-# Pins OSCFREQ[2:0] must be configured to 100*/
-	dpll_spi_write( 0x03DD, 0x83);
-	dpll_spi_write( 0x03E1, 0x0F);
-	dpll_spi_write( 0x03E4, 0x18);
-	dpll_spi_write( 0x03DE, 0x4F);
-	dpll_spi_write( 0x03E5, 0x04);
-	dpll_spi_write( 0x03E5, 0x00);
-#endif
-#if 0
-	/*# init priority to 0 (disable) ic7 = 1 highest*/
-	dpll_spi_write( 0x0080, 0x00);
-#endif
 
 	/*# dpll 2 - force select local clock ic3*/
 	dpll_spi_write( 0x0080, 0x01);
 	dpll_spi_write( 0x0084, 0x61);
 	dpll_spi_write( 0x0085, 0x74);
 	dpll_spi_write( 0x0089, 0x27);
-#if 0
-	/*# dpll 1 - force select local clock ic3*/
-	dpll_spi_write( 0x0080, 0x00);
-	dpll_spi_write( 0x0081, 0x03);
-#endif
-#if 0
-	/*# ic1  64k*/
-	dpll_spi_write( 0x0060, 0x01);
-	dpll_spi_write( 0x0061, 0x82);
-	dpll_spi_write( 0x0062, 0x01);
 
-	/*# ic2  64k*/
-	dpll_spi_write( 0x0060, 0x02);
-	dpll_spi_write( 0x0061, 0x82);
-	dpll_spi_write( 0x0062, 0x01);
-
-	/*##ic3 ic4 5 6 7  156.25M*/
-	dpll_spi_write( 0x0060, 0x03);
-	dpll_spi_write( 0x0061, 0x9C);
-	dpll_spi_write( 0x0062, 0x01);
-	dpll_spi_write( 0x0064, 0x00);
-	dpll_spi_write( 0x0065, 0x00);
-	dpll_spi_write( 0x0066, 0x04);
-	dpll_spi_write( 0x0067, 0x00);
-	dpll_spi_write( 0x0068, 0x00);
-	dpll_spi_write( 0x0069, 0x00);
-
-	dpll_spi_write( 0x0060, 0x04);
-	dpll_spi_write( 0x0061, 0x9C);
-	dpll_spi_write( 0x0062, 0x01);
-	dpll_spi_write( 0x0064, 0x00);
-	dpll_spi_write( 0x0065, 0x00);
-	dpll_spi_write( 0x0066, 0x04);
-	dpll_spi_write( 0x0067, 0x00);
-	dpll_spi_write( 0x0068, 0x00);
-	dpll_spi_write( 0x0069, 0x00);
-
-	dpll_spi_write( 0x0060, 0x05);
-	dpll_spi_write( 0x0061, 0x9C);
-	dpll_spi_write( 0x0062, 0x01);
-	dpll_spi_write( 0x0064, 0x00);
-	dpll_spi_write( 0x0065, 0x00);
-	dpll_spi_write( 0x0066, 0x04);
-	dpll_spi_write( 0x0067, 0x00);
-	dpll_spi_write( 0x0068, 0x00);
-	dpll_spi_write( 0x0069, 0x00);
-
-	dpll_spi_write( 0x0060, 0x06);
-	dpll_spi_write( 0x0061, 0x9C);
-	dpll_spi_write( 0x0062, 0x01);
-	dpll_spi_write( 0x0064, 0x00);
-	dpll_spi_write( 0x0065, 0x00);
-	dpll_spi_write( 0x0066, 0x04);
-	dpll_spi_write( 0x0067, 0x00);
-	dpll_spi_write( 0x0068, 0x00);
-	dpll_spi_write( 0x0069, 0x00);
-
-	/*##ic7 for 2000 is 64K*/
-	dpll_spi_write( 0x0060, 0x07);
-	dpll_spi_write( 0x0061, 0x82);
-	dpll_spi_write( 0x0062, 0x01);
-
-	/*##ic8 64k*/
-	dpll_spi_write( 0x0060, 0x08);
-	dpll_spi_write( 0x0061, 0x82);
-	dpll_spi_write( 0x0062, 0x01);
-#endif
-#if 1
 	/*# oc1 cml 50MHz*/
 	dpll_spi_write( 0x00C0, 0x01);
 	dpll_spi_write( 0x00C1, 0xC1);
@@ -569,31 +473,6 @@ void dpll_init_pre()
 	/*# End OC6 Register Bank
 
 # Begin OC7 Register Bank  cmos 2MHz*/
-#if 0
-	dpll_spi_write( 0x00C0, 0x07);
-	dpll_spi_write( 0x00B0, 0x33);
-	dpll_spi_write( 0x00B1, 0x33);
-	dpll_spi_write( 0x00B2, 0x33);
-	dpll_spi_write( 0x00B3, 0x31);
-	dpll_spi_write( 0x00B4, 0x61);
-	dpll_spi_write( 0x00B8, 0x02);
-	dpll_spi_write( 0x00BC, 0xdf);
-	dpll_spi_write( 0x00BD, 0x97);
-	dpll_spi_write( 0x00BE, 0x69);
-	dpll_spi_write( 0x00C1, 0x40);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C4, 0x20);
-	dpll_spi_write( 0x00C5, 0x01);
-	dpll_spi_write( 0x00C8, 0x1f);
-	dpll_spi_write( 0x00C9, 0x00);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00CC, 0x04);
-	dpll_spi_write( 0x00CD, 0x00);
-	dpll_spi_write( 0x00CE, 0x00);
-	dpll_spi_write( 0x00CF, 0x00);
-	dpll_spi_write( 0x00D3, 0x58);
-#else
 	dpll_spi_write( 0x00C0, 0x07);
 	dpll_spi_write( 0x00C1, 0x30);
 	dpll_spi_write( 0x00C3, 0x80);
@@ -602,7 +481,6 @@ void dpll_init_pre()
 	dpll_spi_write( 0x00ca, 0x00);
 	dpll_spi_write( 0x00cb, 0x00);
 	
-#endif
 	/*# End OC7 Register Bank*/
 
 	dpll_spi_write( 0x03E5, 0x04);
@@ -621,170 +499,8 @@ void dpll_init_pre()
 	dpll_spi_write( 0x00D0, 0x03);
 	dpll_spi_write( 0x00D0, 0x83);
 	/*# lock the dpll register*/
-#else
-	/*# oc1 cmos 25MHz, cml 25MHz*/
-	dpll_spi_write( 0x00C0, 0x01);
-	dpll_spi_write( 0x00C1, 0xC1);
-	dpll_spi_write( 0x00C2, 0x10);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C4, 0x80);
-	dpll_spi_write( 0x00C8, 0x00);
-	dpll_spi_write( 0x00C9, 0x00);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00D0, 0x98);
-	dpll_spi_write( 0x00D1, 0x13);
-	dpll_spi_write( 0x00D2, 0x13);
-	dpll_spi_write( 0x00D8, 0x02);
-	dpll_spi_write( 0x00E0, 0x00);
-	dpll_spi_write( 0x00E1, 0x00);
-	dpll_spi_write( 0x00E2, 0x00);
-	dpll_spi_write( 0x00E3, 0x00);
-	dpll_spi_write( 0x00E4, 0x00);
-	dpll_spi_write( 0x00E5, 0x00);
-	dpll_spi_write( 0x00E6, 0x00);
-	dpll_spi_write( 0x00E7, 0x00);
-	dpll_spi_write( 0x00E8, 0x00);
-	dpll_spi_write( 0x00E9, 0x50);
-	dpll_spi_write( 0x00F2, 0x2C);
-
-	/*# oc2 cmos 25MHz, cml 25MHz */
-	dpll_spi_write( 0x00C0, 0x02);
-	dpll_spi_write( 0x00C1, 0xC1);
-	dpll_spi_write( 0x00C2, 0x10);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C4, 0x80);
-	dpll_spi_write( 0x00C8, 0x00);
-	dpll_spi_write( 0x00C9, 0x00);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00D0, 0x98);
-	dpll_spi_write( 0x00D1, 0x13);
-	dpll_spi_write( 0x00D2, 0x13);
-	dpll_spi_write( 0x00D8, 0x02);
-	dpll_spi_write( 0x00E0, 0x00);
-	dpll_spi_write( 0x00E1, 0x00);
-	dpll_spi_write( 0x00E2, 0x00);
-	dpll_spi_write( 0x00E3, 0x00);
-	dpll_spi_write( 0x00E4, 0x00);
-	dpll_spi_write( 0x00E5, 0x00);
-	dpll_spi_write( 0x00E6, 0x00);
-	dpll_spi_write( 0x00E7, 0x00);
-	dpll_spi_write( 0x00E8, 0x00);
-	dpll_spi_write( 0x00E9, 0x50);
-
-	/*# oc3 cmos 25MHz, cml 25MHz */
-	dpll_spi_write( 0x00C0, 0x03);
-	dpll_spi_write( 0x00C1, 0xC1);
-	dpll_spi_write( 0x00C2, 0x10);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C4, 0x80);
-	dpll_spi_write( 0x00C8, 0x00);
-	dpll_spi_write( 0x00C9, 0x00);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00D0, 0x98);
-	dpll_spi_write( 0x00D1, 0x13);
-	dpll_spi_write( 0x00D2, 0x13);
-	dpll_spi_write( 0x00D8, 0x02);
-	dpll_spi_write( 0x00E0, 0x00);
-	dpll_spi_write( 0x00E1, 0x00);
-	dpll_spi_write( 0x00E2, 0x00);
-	dpll_spi_write( 0x00E3, 0x00);
-	dpll_spi_write( 0x00E4, 0x00);
-	dpll_spi_write( 0x00E5, 0x00);
-	dpll_spi_write( 0x00E6, 0x00);
-	dpll_spi_write( 0x00E7, 0x00);
-	dpll_spi_write( 0x00E8, 0x00);
-	dpll_spi_write( 0x00E9, 0x50);
-
-	/*# Begin OC4 Register Bank  63.536 k*/
-	dpll_spi_write( 0x00C0, 0x04);
-	dpll_spi_write( 0x00B0, 0x74);
-	dpll_spi_write( 0x00B1, 0x9B);
-	dpll_spi_write( 0x00B2, 0xD5);
-	dpll_spi_write( 0x00B3, 0xE9);
-	dpll_spi_write( 0x00B4, 0x51);
-	dpll_spi_write( 0x00B5, 0x44);
-	dpll_spi_write( 0x00B6, 0x83);
-	dpll_spi_write( 0x00B7, 0xAF);
-	dpll_spi_write( 0x00B8, 0x01);
-	dpll_spi_write( 0x00BC, 0xFF);
-	dpll_spi_write( 0x00BD, 0x7F);
-	dpll_spi_write( 0x00BE, 0x7D);
-	dpll_spi_write( 0x00C1, 0x40);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C8, 0xE7);
-	dpll_spi_write( 0x00C9, 0x03);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00D3, 0x5C);
-
-	/*# oc5 cmos and cml 25MHz */
-	dpll_spi_write( 0x00C0, 0x05);
-	dpll_spi_write( 0x00C1, 0xC0);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C4, 0x80);
-	dpll_spi_write( 0x00C8, 0x01);
-	dpll_spi_write( 0x00C9, 0x00);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00CC, 0x01);
-	dpll_spi_write( 0x00CD, 0x00);
-	dpll_spi_write( 0x00CE, 0x00);
-	dpll_spi_write( 0x00CF, 0x00);
-
-	/*# Begin OC6 Register Bank 1hz*/
-	dpll_spi_write( 0x00C0, 0x06);
-	dpll_spi_write( 0x00C1, 0xC0);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C8, 0x7F);
-	dpll_spi_write( 0x00C9, 0xF0);
-	dpll_spi_write( 0x00CA, 0xFA);
-	dpll_spi_write( 0x00CB, 0x02);
-	/*# End OC6 Register Bank
-
-# Begin OC7 Register Bank  63.536 k*/
-	dpll_spi_write( 0x00C0, 0x07);
-	dpll_spi_write( 0x00B0, 0x74);
-	dpll_spi_write( 0x00B1, 0x9B);
-	dpll_spi_write( 0x00B2, 0xD5);
-	dpll_spi_write( 0x00B3, 0xE9);
-	dpll_spi_write( 0x00B4, 0x51);
-	dpll_spi_write( 0x00B5, 0x44);
-	dpll_spi_write( 0x00B6, 0x83);
-	dpll_spi_write( 0x00B7, 0xAF);
-	dpll_spi_write( 0x00B8, 0x01);
-	dpll_spi_write( 0x00BC, 0xFF);
-	dpll_spi_write( 0x00BD, 0x7F);
-	dpll_spi_write( 0x00BE, 0x7D);
-	dpll_spi_write( 0x00C1, 0x40);
-	dpll_spi_write( 0x00C3, 0x80);
-	dpll_spi_write( 0x00C8, 0xE7);
-	dpll_spi_write( 0x00C9, 0x03);
-	dpll_spi_write( 0x00CA, 0x00);
-	dpll_spi_write( 0x00CB, 0x00);
-	dpll_spi_write( 0x00D3, 0x5C);
-	/*# End OC7 Register Bank*/
-
-	dpll_spi_write( 0x03E5, 0x04);
-	dpll_spi_write( 0x03E5, 0x00);
-
-	/*# relock apll 1*/
-	dpll_spi_write( 0x00C0, 0x01);
-	dpll_spi_write( 0x00D0, 0x18);
-	dpll_spi_write( 0x00D0, 0x98);
-	/*# relock apll 2 */
-	dpll_spi_write( 0x00C0, 0x02);
-	dpll_spi_write( 0x00D0, 0x18);
-	dpll_spi_write( 0x00D0, 0x98);
-	/*# relock apll 3*/ 
-	dpll_spi_write( 0x00C0, 0x03);
-	dpll_spi_write( 0x00D0, 0x18);
-	dpll_spi_write( 0x00D0, 0x98);
-	/*# lock the dpll register*/
-#endif
 	printf("done!\n\r");
+
 	return 0;
 }
 

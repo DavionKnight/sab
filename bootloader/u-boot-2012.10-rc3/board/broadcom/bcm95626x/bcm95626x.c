@@ -67,23 +67,69 @@ void cmicd_init_soc (void) {
     reg32_write((volatile u32 *)CMIC_SBUS_RING_MAP_16_23, 0x03103775);
     reg32_write((volatile u32 *)CMIC_SBUS_RING_MAP_24_31, 0x0);
 }
+
+#if 1
+void bcmgpio_directory_output(int gpio, unsigned char val)
+{
+	u32 read = 0;
+
+	read = reg32_read((volatile u32 *)0x1800a008);
+	read |= 1 << gpio;
+	reg32_write((volatile u32 *)0x1800a008, read);
+		
+	read = 0;
+	read = reg32_read((volatile u32 *)0x1800a004);
+	read = val ? (read |(1<<gpio)):(read &(~(1<<gpio)));
+	reg32_write((volatile u32 *)0x1800a004, read);
+}
+void bcmgpio_directory_input(int gpio)
+{
+	u32 read = 0;
+
+	read = reg32_read((volatile u32 *)0x1800a008);
+	read &= ~(1 << gpio);
+	reg32_write((volatile u32 *)0x1800a008, read);
+}	
+unsigned int bcmgpio_get_value(int gpio)
+{
+	u32 read = 0;
+	read = reg32_read((volatile u32 *)0x1800a000);
+	printf("read=0x%08x\n",read);
+	return read & (1 << gpio)?1:0;
+}
+#endif
+
 /*add by zhangjiajie 2017-2-14*/
 static
 void reset_by_gpio()
 {
+	/*init gpio directory and value*/
+	bcmgpio_directory_output(0, 1);
+	bcmgpio_directory_output(1, 1);
+	bcmgpio_directory_output(2, 1);
+	bcmgpio_directory_output(10, 1);
+	bcmgpio_directory_output(11, 1);
+	bcmgpio_directory_output(12, 1);
+	bcmgpio_directory_output(13, 1);
+	bcmgpio_directory_output(14, 1);
+	bcmgpio_directory_output(15, 1);
+
 	/*reset phy vsc8211 by gpio 14*/
-	reg32_write((volatile u32 *)0x1800a008, 0x00004000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	bcmgpio_directory_output(14, 0);
 	udelay(20000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00004000);
-	reg32_write((volatile u32 *)0x1800a008, 0x00000000);
+	bcmgpio_directory_output(14, 1);
 	/*reset dpll by gpio15*/
-	reg32_write((volatile u32 *)0x1800a008, 0x00008000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00000000);
+	bcmgpio_directory_output(15, 0);
 	udelay(20000);
-	reg32_write((volatile u32 *)0x1800a004, 0x00008000);
-	reg32_write((volatile u32 *)0x1800a008, 0x00000000);
-	printf("reset vsc8211, ds31400 done\n");
+	bcmgpio_directory_output(15, 1);
+#if 0
+	/*reset fpga by gpio13*/
+	bcmgpio_directory_output(13, 0);
+	udelay(20000);
+	bcmgpio_directory_output(13, 1);
+#endif
+
+	printf("reset vsc8211, ds31400 fpga done\n");
 }
 /*****************************************
  * board_init -early hardware init
