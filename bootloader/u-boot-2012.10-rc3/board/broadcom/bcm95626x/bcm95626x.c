@@ -103,16 +103,22 @@ unsigned int bcmgpio_get_value(int gpio)
 static
 void reset_by_gpio()
 {
+#if 1
 	/*init gpio directory and value*/
 	bcmgpio_directory_output(0, 1);
 	bcmgpio_directory_output(1, 1);
+#endif
+#if 0
 	bcmgpio_directory_output(2, 1);
 	bcmgpio_directory_output(10, 1);
+#endif
+#if 0
 	bcmgpio_directory_output(11, 1);
 	bcmgpio_directory_output(12, 1);
 	bcmgpio_directory_output(13, 1);
 	bcmgpio_directory_output(14, 1);
 	bcmgpio_directory_output(15, 1);
+#endif
 
 	/*reset phy vsc8211 by gpio 14*/
 	bcmgpio_directory_output(14, 0);

@@ -1464,7 +1464,7 @@ int outband_init(ch_t *ch)
         init_timer(&link_scan_timer);
    
         link_scan_timer.function = outband_phy_link_status_scan;  
-        printk("HZ=%d\n",HZ);                            
+//        printk("HZ=%d\n",HZ);                            
         link_scan_timer.expires = jiffies + (HZ * 1);
 	link_scan_timer.data = (unsigned long)ch;
         add_timer(&link_scan_timer);   
@@ -1574,7 +1574,7 @@ chipinit(ch_t *ch, uint options)
 	gmac_enable(ch);
 
 	static int once = 0;
-	printf("etc->phyaddr = %d\n",etc->phyaddr);
+//	printf("etc->phyaddr = %d\n",etc->phyaddr);
 	if((0x5 == etc->phyaddr)&&(0 == once))
 	{
 		outband_init(ch);
