@@ -6,6 +6,8 @@ SMP=$3
 PREEMPT=$4
 CC=$5
 
+myver=v001r001
+
 vecho() { [ "${quiet}" = "silent_" ] || echo "$@" ; }
 
 # If compile.h exists already and we don't own autoconf.h
@@ -77,6 +79,7 @@ UTS_TRUNCATE="cut -b -$UTS_LEN"
   echo \#define LINUX_COMPILE_HOST \"`echo $LINUX_COMPILE_HOST | $UTS_TRUNCATE`\"
 
   echo \#define LINUX_COMPILER \"`$CC -v 2>&1 | tail -n 1`\"
+  echo \#define LINUX_MY_VER \"$myver\"
 ) > .tmpcompile
 
 # Only replace the real compile.h if the new one is different,
