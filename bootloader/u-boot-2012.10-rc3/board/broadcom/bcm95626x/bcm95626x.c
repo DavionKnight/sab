@@ -94,7 +94,6 @@ unsigned int bcmgpio_get_value(int gpio)
 {
 	u32 read = 0;
 	read = reg32_read((volatile u32 *)0x1800a000);
-	printf("read=0x%08x\n",read);
 	return read & (1 << gpio)?1:0;
 }
 #endif

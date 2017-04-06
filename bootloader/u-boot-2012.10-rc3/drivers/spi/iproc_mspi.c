@@ -84,15 +84,15 @@ int mspi_init(void)
 
 	do{
 
-	i++;
+		i++;
 
-	if((i>200)||(wait_fpga_load_done()))
-	break;
+		if((i>10)||(wait_fpga_load_done()))
+			break;
 
-	udelay(100000);	
+		udelay(1000000);	
 
 	}while(1);	
-	printf("%s\n",i>200?"failed":"successfully");
+	printf("%s\n",i>10?"failed":"successfully");
 
 	ptr = (u32*)CMIC_OVERRIDE_STRAP;
 	priv =	 (volatile struct mspi_hw *)(MSPI_REG_BASE + 0x000);
