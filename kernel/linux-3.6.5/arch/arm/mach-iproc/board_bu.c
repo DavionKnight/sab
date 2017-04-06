@@ -732,7 +732,7 @@ static struct platform_device board_gmac_device[IPROC_MAX_GMAC_CORES] = {
 static struct platform_device *board_devices[] __initdata = {
 #ifdef CONFIG_IPROC_I2C
     &board_smbus_device,
-#if defined(CONFIG_MACH_HX4) || defined(CONFIG_MACH_KT2)
+#if defined(CONFIG_MACH_HX4) || defined(CONFIG_MACH_KT2) || defined(CONFIG_MACH_SB2)
     &board_smbus_device1,
 #endif
 #endif /* CONFIG_IPROC_I2C */
