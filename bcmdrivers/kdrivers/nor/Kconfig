@@ -1,0 +1,9 @@
+config IPROC_MTD_NOR
+	bool "Broadcom CFI NOR support"
+	depends on ARCH_IPROC
+	select MTD_CFI
+	default n
+	help
+	  This selects a driver for the iProc NOR support.
+	
+	  If unsure, say N.
