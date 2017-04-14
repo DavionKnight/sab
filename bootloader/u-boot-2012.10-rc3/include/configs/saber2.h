@@ -382,7 +382,7 @@
 #define CONFIG_SYS_I2C_SPEED    100000  /* Default on 100KHz */
 #define CONFIG_SYS_I2C_SLAVE    0xff    /* No slave address */
 #define CONFIG_I2C_MULTI_BUS
-#define CONFIG_SYS_MAX_I2C_BUS  3
+#define CONFIG_SYS_MAX_I2C_BUS  2
 
 #endif /* !CONFIG_IPROC_MIN_FEATURES */
 

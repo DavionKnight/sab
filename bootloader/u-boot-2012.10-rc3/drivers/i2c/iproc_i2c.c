@@ -537,7 +537,7 @@ void i2c_init (int speed, int slaveadd)
     i2c_set_bus_num(2);
     iproc_i2c_init(speed, slaveadd);
 #endif
-    //i2c_set_bus_num(old_bus); /* tianzhy */
+    i2c_set_bus_num(old_bus); /* tianzhy */
 #else
     iproc_i2c_init(speed, slaveadd);
 #endif

@@ -220,6 +220,14 @@ static int do_i2c_read ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv
         puts ("Error reading the chip.\n");
         return 1;
     }
+    int i = 0;
+    printf("return:\n");
+    for(i = 0; i < length; i++)
+    {
+	printf("0x%02x ", memaddr[i]);
+    }
+    printf("\n");
+	
     return 0;
 }
 
