@@ -48,6 +48,18 @@
 DECLARE_GLOBAL_DATA_PTR;
 #endif
 
+/*add for disturb autoboot by zhangjiajie 2017-4-17*/
+#undef  CONFIG_AUTOBOOT_KEYED
+#undef  CONFIG_AUTOBOOT_PROMPT
+#undef  CONFIG_AUTOBOOT_DELAY_STR
+#undef  CONFIG_AUTOBOOT_STOP_STR
+
+#define CONFIG_AUTOBOOT_KEYED           1
+#define CONFIG_AUTOBOOT_PROMPT          "\nPress CTRL + C to abort autoboot in %d seconds\n"
+#define CONFIG_AUTOBOOT_DELAY_STR       "linux"
+#define CONFIG_AUTOBOOT_STOP_STR        "\x03"
+/*add end*/
+
 /*
  * Board-specific Platform code can reimplement show_boot_progress () if needed
  */
@@ -120,7 +132,8 @@ int abortboot(int bootdelay)
 #endif
 
 #  ifdef CONFIG_AUTOBOOT_PROMPT
-	printf(CONFIG_AUTOBOOT_PROMPT);
+//	printf(CONFIG_AUTOBOOT_PROMPT);
+	printf(CONFIG_AUTOBOOT_PROMPT,bootdelay);
 #  endif
 
 #  ifdef CONFIG_AUTOBOOT_DELAY_STR
