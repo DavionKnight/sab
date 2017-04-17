@@ -1971,9 +1971,11 @@ static void __exit iproc_smb_exit(void)
    remove_proc_entry(PROC_GLOBAL_PARENT_DIR, NULL);
 }
 
+#if 0 /*delete I2C driver kernel space by zhangjiajie 2017-4-17*/
 module_init(iproc_smb_init);
 module_exit(iproc_smb_exit);
 
 MODULE_AUTHOR("Broadcom Corporation");
 MODULE_DESCRIPTION("IPROC I2C (SMBus) Bus Driver");
 MODULE_LICENSE("GPL");
+#endif
