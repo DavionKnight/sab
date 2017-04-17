@@ -23,6 +23,20 @@ void reset_by_gpio2()
 	udelay(20000);
 	bcmgpio_directory_output(13, 1);
 
+#if 1
+	udelay(5000000);
+
+	unsigned int data[2];
+
+	bcmgpio_directory_output(11, 1);
+	bcmgpio_directory_output(12, 1);
+	udelay(10000);
+	fpga_spi_read(0x40, data, 2);
+	data[0] &= 0xfe; 
+	fpga_spi_write(0x40,data, 2);
+	udelay(10000);
+#endif
+//	fpga_spi_read();
 	/*reset bcm5482 by gpio11, gpio12*/
 	bcmgpio_directory_output(11, 0);
 	bcmgpio_directory_output(12, 0);
@@ -31,6 +45,14 @@ void reset_by_gpio2()
 	bcmgpio_directory_output(12, 1);
 
 	printf("reset bcm5482, fpga done\n");
+#if 1
+	memset(data, 0, 2);
+	fpga_spi_read(0x40, data, 2);
+	data[0] |= 0x1; 
+	udelay(10000);
+	fpga_spi_write(0x40,data, 2);
+	memset(data, 0, 2);
+#endif
 }
 
 /* Chip attributes */
@@ -237,6 +259,56 @@ int mspi_write8( u8 *buf, int len)
 {
     return  mspi_writeread8(buf, len, NULL, 0);
 }
+void fpga_spi_read(unsigned short addr, unsigned char data, size_t count)
+{
+	unsigned short address = 0;
+	unsigned char txbuf[16] = {0};
+	unsigned char rxbuf[16] = {0};
+	int i = 0;
+
+printf("addr=%d,count=%d\n",addr, count);
+	mspi_cs_set(0, 0);
+
+	txbuf[0] = 0x3;
+	txbuf[1] = (unsigned char)((addr >> 8) & 0xff);
+	txbuf[2] = (unsigned char)((addr) & 0xff);
+
+	mspi_writeread8(txbuf,3,rxbuf,10);
+	memcpy(data, rxbuf, count);
+#if 0
+	printf("data\n");
+	for(i=0;i<16;i++)
+		printf(" 0x%02x",data[i]);
+#endif
+	printf("\nrxbuf\n");
+	for(i=0;i<16;i++)
+		printf(" 0x%02x",rxbuf[i]);
+	printf("\n");
+
+	mspi_cs_set(0, 1);
+	return 0;
+}
+void fpga_spi_write(unsigned short addr, unsigned char data, size_t count)
+{
+	unsigned short address = 0;
+	unsigned char txbuf[16] = {0};
+	unsigned char rxbuf[16] = {0};
+	int i = 0;
+
+	mspi_cs_set(0, 0);
+
+	address = addr;
+	txbuf[0] = 0x2;
+	txbuf[1] = (unsigned char)((address >> 8) & 0xff);
+	txbuf[2] = (unsigned char)((address) & 0xff);
+
+	memcpy(&txbuf[3], data, count);
+	mspi_write8(txbuf, count+3);
+
+	mspi_cs_set(0, 1);
+
+	return 0;
+}
 int dpll_spi_read_driver(unsigned short addr, unsigned char *data, size_t count)
 {
 	unsigned short address = 0;
@@ -266,7 +338,7 @@ int dpll_spi_read_driver(unsigned short addr, unsigned char *data, size_t count)
 	for(i=0;i<16;i++)
 		printf(" 0x%02x",data[i]);
 #endif
-	printf("\nrxbuf\n");
+	printf("rxbuf\n");
 	for(i=0;i<16;i++)
 		printf(" 0x%02x",rxbuf[i]);
 	printf("\n");

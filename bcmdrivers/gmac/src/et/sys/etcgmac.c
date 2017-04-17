@@ -799,7 +799,10 @@ gmac_speed(ch_t *ch, uint32 speed)
     uint32_t sdctl;
     uint32 set_speed = speed;
 #endif /* CONFIG_MACH_GH || CONFIG_MACH_HR3 */
-
+	if(1 == ch->etc->unit) /*eth1 is mii interface,force to 100M FULL by zhangjiajie 2017-4-12*/
+	{
+		speed = 3;
+	}
 	switch (speed) {
 		case ET_10HALF:
 			hd_ena = CC_HD;
@@ -838,7 +841,7 @@ gmac_speed(ch_t *ch, uint32 speed)
 
 	cmdcfg = R_REG(ch->osh, &ch->regs->cmdcfg);
 
-	serdes_init(0, speed); /*mac config update add by zhangjiajie 2017-3-1*/
+	serdes_init(ch->etc->unit, speed); /*mac config update add by zhangjiajie 2017-3-1*/
 
 	/* put mac in reset */
 	gmac_init_reset(ch);
@@ -1437,12 +1440,12 @@ void outband_phy_link_status_scan(unsigned long data)
 			if(1000 == speed)
 			{
 				gmac_speed(ch, 5);
-				serdes_init(0, 2);
+				serdes_init(ch->etc->unit, 2);
 			}
 			else
 			{
 				gmac_speed(ch, 3);
-				serdes_init(0, 1);
+				serdes_init(ch->etc->unit, 1);
 			}
 		}
 		              printk("link status change:%d,speed:%d\n",link_status,speed);
@@ -1482,6 +1485,7 @@ int outband_init(ch_t *ch)
 static void
 chipinit(ch_t *ch, uint options)
 {
+printf("chipinit send\n\n");
 	etc_info_t *etc;
 	gmacregs_t *regs;
 	uint idx;
@@ -1574,11 +1578,11 @@ chipinit(ch_t *ch, uint options)
 	gmac_enable(ch);
 
 	static int once = 0;
-//	printf("etc->phyaddr = %d\n",etc->phyaddr);
-	if((0x5 == etc->phyaddr)&&(0 == once))
+	printf("etc->uint = %d\n",etc->unit);
+	if((0 == etc->unit) && (0 == once))
 	{
 		outband_init(ch);
-		once = 1;
+		once ++;
 	}
 }
 
@@ -1587,6 +1591,7 @@ chipinit(ch_t *ch, uint options)
 static bool BCMFASTPATH
 chiptx(ch_t *ch, void *p0)
 {
+printf("chiptx send\n");
 	int error, len;
 	uint32 q = TX_Q0;
 
@@ -1618,6 +1623,7 @@ chiptx(ch_t *ch, void *p0)
 
 	error = dma_txfast(ch->di[q], p0, TRUE);
 
+printf("chiptx send dma_txfast %d\n",error);
 	if (error) {
 		ET_ERROR(("et%d: chiptx: out of txds\n", ch->etc->unit));
 		ch->etc->txnobuf++;
@@ -1635,6 +1641,7 @@ chiptx(ch_t *ch, void *p0)
 		}
 	}
 
+printf("chiptx send ok\n\n");
 	return TRUE;
 }
 
@@ -1642,6 +1649,7 @@ chiptx(ch_t *ch, void *p0)
 static void BCMFASTPATH
 chiptxreclaim(ch_t *ch, bool forceall)
 {
+printf("chiptxreclaim send\n");
 	int32 idx;
 
 	ET_TRACE(("et%d: chiptxreclaim\n", ch->etc->unit));
@@ -1656,6 +1664,7 @@ chiptxreclaim(ch_t *ch, bool forceall)
 static void * BCMFASTPATH
 chiprx(ch_t *ch)
 {
+printf("chiptxreclaim send\n\n");
 	void *p;
 	struct ether_addr *da;
 
@@ -1726,6 +1735,7 @@ chiprx(ch_t *ch)
 static void
 chiprxreclaim(ch_t *ch)
 {
+printf("chiptxreclaim send\n\n");
 	ET_TRACE(("et%d: chiprxreclaim\n", ch->etc->unit));
 	dma_rxreclaim(ch->di[RX_Q0]);
 	ch->intstatus &= ~I_RI;

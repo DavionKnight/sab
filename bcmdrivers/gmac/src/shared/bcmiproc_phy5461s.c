@@ -489,43 +489,46 @@ phy5461_init(uint eth_num, uint phyaddr)
 #if 0
 	phy5461_reset_setup(eth_num, phyaddr);
 #else
-	val = 0x2a30;	
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
-	udelay(1000);
-	val = 0x0212;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x8, &val);
-	udelay(1000);
-	val = 0x32b5;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
-	udelay(1000);
-	val = 0xf;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x2, &val);
-	udelay(1000);
-	val = 0x472a;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1, &val);
-	udelay(1000);
-	val = 0x8fa4;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
-	udelay(1000);
-	val = 0x2a30;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
-	udelay(1000);
-	val = 0x12;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x8, &val);
-	udelay(1000);
-	val = 0;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
-	udelay(1000);
+	if(0 == eth_num) /*eth1 should not set by zhangjiajie 2017-4-12*/
+	{
+		val = 0x2a30;	
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+		udelay(1000);
+		val = 0x0212;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x8, &val);
+		udelay(1000);
+		val = 0x32b5;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+		udelay(1000);
+		val = 0xf;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x2, &val);
+		udelay(1000);
+		val = 0x472a;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1, &val);
+		udelay(1000);
+		val = 0x8fa4;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
+		udelay(1000);
+		val = 0x2a30;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+		udelay(1000);
+		val = 0x12;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x8, &val);
+		udelay(1000);
+		val = 0;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1f, &val);
+		udelay(1000);
 
-	val = 0x4101;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1e, &val);
-	udelay(1000);
-	val = 0x1940;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
-	udelay(1000);
-	val = 0x1140;
-	phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
-	printf("vsc8211 init done!\n");
+		val = 0x4101;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x1e, &val);
+		udelay(1000);
+		val = 0x1940;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
+		udelay(1000);
+		val = 0x1140;
+		phy5461_wr_reg(eth_num,0x5, 0, 0, 0x0, &val);
+		printf("vsc8211 init done!\n");
+	}
 	
 #endif
 
