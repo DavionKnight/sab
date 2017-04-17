@@ -43,6 +43,14 @@
  * Monitor Command Table
  */
 
+#if defined(CONFIG_PDT_FACTORY_ENV)
+char	*getfacenv	     (char *);
+int	getfacenv_r     (char *name, char *buf, unsigned len);
+int	fac_env_init     (void);
+int	fac_envmatch     (uchar *, int);
+int	fac_saveenv	     (void);
+#endif
+
 struct cmd_tbl_s {
 	char		*name;		/* Command Name			*/
 	int		maxargs;	/* maximum number of arguments	*/

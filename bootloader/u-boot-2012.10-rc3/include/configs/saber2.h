@@ -383,6 +383,19 @@
 #define CONFIG_SYS_I2C_SLAVE    0xff    /* No slave address */
 #define CONFIG_I2C_MULTI_BUS
 #define CONFIG_SYS_MAX_I2C_BUS  2
+#define CONFIG_PDT_FACTORY_ENV		/*add for eeprom factory info */
+#define CONFIG_PDT_ENV_OFFSET		0		/* Offset within the EEPROM for the PDT-Factory settings */
+#define CONFIG_PDT_ENV_SIZE			256		/* max Size of the PDT-Factory-settings */
+#define CONFIG_SYS_I2C_EEPROM_ADDR	0x56
+
+#define	CONFIG_DEFAULT_FACTORY_ENV					\
+	"Vendor=HuaHuan\0"	\
+	"Serial#=99999\0" \
+	"Device=HT201\0" \
+	"Hardware_Version=1.0.0.0\0" \
+	"1st_MAC=64:1E:81:01:02:03\0" \
+	"Date_of_Production=09.01.2014\0" \
+	"HwCfg=0xfe000100\0" 
 
 #endif /* !CONFIG_IPROC_MIN_FEATURES */
 

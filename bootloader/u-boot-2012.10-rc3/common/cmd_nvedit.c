@@ -1125,3 +1125,241 @@ U_BOOT_CMD_COMPLETE(
 );
 #endif
 #endif /* CONFIG_SPL_BUILD */
+
+/*set product information add by zhangjiajie 2017-4-14*/
+
+int _do_setfactory (int flag, int argc, char *argv[])
+{
+	int   i, len, oldval;
+	uchar *env, *nxt = NULL;
+	char *name;
+
+	uchar *env_data = fac_env_get_addr(0);
+
+	if (!env_data)	/* need copy in RAM */
+		return 1;
+	
+	name = argv[1];
+
+	if (strchr(name, '=')) {
+		printf ("## Error: illegal character '=' in variable name \"%s\"\n", name);
+		return 1;
+	}
+
+	env_id++;
+	/*
+	 * search if variable with this name already exists
+	 */
+	oldval = -1;
+	for (env=env_data; *env; env=nxt+1) {
+		for (nxt=env; *nxt; ++nxt)
+			;
+		if ((oldval = fac_envmatch((uchar *)name, env-env_data)) >= 0)
+			break;
+	}
+
+	/*
+	 * Delete any existing definition
+	 */
+	if (oldval >= 0) {
+#ifndef CONFIG_ENV_OVERWRITE
+
+		/*
+		 * Ethernet Address and serial# can be set only once,
+		 * ver is readonly.
+		 */
+		if (
+#ifdef CONFIG_HAS_UID
+		/* Allow serial# forced overwrite with 0xdeaf4add flag */
+		    ((strcmp (name, "serial#") == 0) && (flag != 0xdeaf4add))
+#else
+		    (strcmp (name, "serial#") == 0)
+#endif
+			) {
+			printf ("Can't overwrite \"%s\"\n", name);
+			return 1;
+		}
+#endif
+
+		if (*++nxt == '\0') {
+			if (env > env_data) {
+				env--;
+			} else {
+				*env = '\0';
+			}
+		} else {
+			for (;;) {
+				*env = *nxt++;
+				if ((*env == '\0') && (*nxt == '\0'))
+					break;
+				++env;
+			}
+		}
+		*++env = '\0';
+	}
+
+	/* Delete only ? */
+	if ((argc < 3) || argv[2] == NULL) {
+		fac_env_crc_update ();
+		return 0;
+	}
+
+	/*
+	 * Append new definition at the end
+	 */
+	for (env=env_data; *env || *(env+1); ++env)
+		;
+	if (env > env_data)
+		++env;
+	/*
+	 * Overflow when:
+	 * "name" + "=" + "val" +"\0\0"  > ENV_SIZE - (env-env_data)
+	 */
+	len = strlen(name) + 2;
+	/* add '=' for first arg, ' ' for all others */
+	for (i=2; i<argc; ++i) {
+		len += strlen(argv[i]) + 1;
+	}
+	if (len > (&env_data[FAC_ENV_SIZE]-env)) {
+		printf ("## Error: environment overflow, \"%s\" deleted\n", name);
+		return 1;
+	}
+	while ((*env = *name++) != '\0')
+		env++;
+	for (i=2; i<argc; ++i) {
+		char *val = argv[i];
+
+		*env = (i==2) ? '=' : ' ';
+		while ((*++env = *val++) != '\0')
+			;
+	}
+
+	/* end is marked with double '\0' */
+	*++env = '\0';
+
+	/* Update CRC */
+	fac_env_crc_update ();
+
+	return 0;
+}
+
+int do_setfactory ( cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	if (argc < 2) {
+		printf ("Usage:\n%s\n", cmdtp->usage);
+		return 1;
+	}
+	return _do_setfactory (flag, argc, argv);
+}
+
+void setfactory (char *varname, char *varvalue)
+{
+	char *argv[4] = { "setenv", varname, varvalue, NULL };
+	
+	_do_setfactory (0, 3, argv);
+}
+
+static int printfactory(char *name, int state)
+{
+	int i, j;
+	char c, buf[17];
+
+	i = 0;
+	buf[16] = '\0';
+
+	while (state && fac_env_get_char(i) != '\0') {
+		if (state == 2 && fac_envmatch((uchar *)name, i) >= 0)
+			state = 0;
+
+		j = 0;
+		do {
+			buf[j++] = c = fac_env_get_char(i++);
+			if (j == sizeof(buf) - 1) {
+				if (state <= 1)
+					puts(buf);
+				j = 0;
+			}
+		} while (c != '\0');
+
+		if (state <= 1) {
+			if (j)
+				puts(buf);
+			putc('\n');
+		}
+
+		if (ctrlc())
+			return -1;
+	}
+
+	if (state == 0)
+		i = 0;
+	return i;
+}
+
+int do_printfactory (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	int i;
+	int rcode = 0;
+
+	/* for test  */
+	#if 0
+	char buff[256];
+       eeprom_read(0xad,	0, buff, 256);
+	  for(i=0; i<64; i++)
+	   	printf("buf[%d]=%x " , i, buff[i]); 
+	#endif 
+	 
+	if (argc == 1) {
+		/* print all env vars */
+		rcode = printfactory(NULL, 1);
+		if (rcode < 0)
+			return 1;
+		printf("\nEnvironment size: %d/%ld bytes\n",
+			rcode, (ulong)FAC_ENV_SIZE);
+		return 0;
+	}
+
+	/* print selected env vars */
+	for (i = 1; i < argc; ++i) {
+		char *name = argv[i];
+		if (printfactory(name, 2)) {
+			printf("## Error: \"%s\" not defined\n", name);
+			++rcode;
+		}
+	}
+
+	return rcode;
+}
+
+int do_savefactory (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	printf ("Saving Environment to EEPROM...\n");
+	return (fac_saveenv() ? 1 : 0);
+}
+
+/* bootloader promopt ***************************************************/
+U_BOOT_CMD(
+	printfactory, 2, 1,	do_printfactory,
+	"printfactory- print factory-environment variables",
+	"\n    - print values of all factory-environment variables\n"
+	"printfactory name ...\n"
+	"    - print value of factory-environment variable 'name'\n"
+);
+
+U_BOOT_CMD(
+	savefactory, 1, 1,	do_savefactory,
+	"savefactory - save factory-environment variables to persistent storage",
+	NULL
+);
+
+U_BOOT_CMD(
+	setfactory, 3, 2,	do_setfactory,
+	"setfactory  - set factory-environment variables",
+	"name value ...\n"
+	"    - set factory-environment variable 'name' to 'value ...'\n"
+	"setfactory name\n"
+	"    - delete factory-environment variable 'name'\n"
+);
+
+
+

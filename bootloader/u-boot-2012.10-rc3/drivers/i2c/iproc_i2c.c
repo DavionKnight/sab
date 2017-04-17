@@ -24,7 +24,13 @@
 #include "iproc_i2c.h"
 #include "errno.h"
 
+#if defined(CONFIG_PDT_FACTORY_ENV) 
 
+extern void fac_env_relocate_spec (void);
+extern uchar fac_env_get_char_spec(int);
+extern int fac_env_check(void);
+
+#endif
 
 /* local debug macro */
 #undef IPROC_I2C_DBG
@@ -521,6 +527,8 @@ static void iproc_i2c_init (int speed, int slaveadd)
 }
 
 extern void iproc_i2c_iomux(int op);
+extern int fac_env_init(void);
+
 void i2c_init (int speed, int slaveadd)
 {
 #ifdef IPROC_I2C_DBG
@@ -540,6 +548,10 @@ void i2c_init (int speed, int slaveadd)
     i2c_set_bus_num(old_bus); /* tianzhy */
 #else
     iproc_i2c_init(speed, slaveadd);
+#endif
+#if defined(CONFIG_PDT_FACTORY_ENV) 
+	fac_env_init();
+	fac_env_check();
 #endif
 }
 

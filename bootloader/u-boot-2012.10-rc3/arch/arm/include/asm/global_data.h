@@ -75,6 +75,10 @@ typedef	struct	global_data {
 	unsigned long	tlb_addr;
 #endif
 	const void	*fdt_blob;	/* Our device tree, NULL if none */
+#if defined(CONFIG_PDT_FACTORY_ENV) 
+	unsigned long	fac_env_addr;	/* Address  of Environment struct	*/
+	unsigned long	fac_env_valid;	/* Checksum of Environment valid?	*/
+#endif
 	void		**jt;		/* jump table */
 	char		env_buf[32];	/* buffer for getenv() before reloc. */
 #if defined(CONFIG_POST) || defined(CONFIG_LOGBUFFER)

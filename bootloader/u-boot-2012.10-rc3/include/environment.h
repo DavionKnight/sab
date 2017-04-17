@@ -195,4 +195,22 @@ int env_check_apply(const char *name, const char *oldval,
 
 #endif /* DO_DEPS_ONLY */
 
+#if defined(CONFIG_PDT_FACTORY_ENV)
+
+#define FAC_ENV_SIZE (CONFIG_PDT_ENV_SIZE - 4)
+
+typedef	struct fac_environment_s {
+	unsigned int 	crc;		/* CRC32 over data bytes	*/
+	unsigned char	data[FAC_ENV_SIZE]; /* Environment data		*/
+} fac_env_t;
+
+unsigned char fac_env_get_char (int);
+
+unsigned char *fac_env_get_addr(int);
+unsigned char fac_env_get_char_memory (int index);
+void fac_env_crc_update (void);
+void fac_set_default_env(void);
+
+#endif
+
 #endif /* _ENVIRONMENT_H_ */
