@@ -23,7 +23,6 @@
 #ifndef _et_dbg_
 #define _et_dbg_
 
-#define BCMDBG
 #ifdef	BCMDBG
 struct ether_header;
 extern void etc_prhdr(char *msg, struct ether_header *eh, uint len, int unit);

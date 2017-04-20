@@ -1485,7 +1485,6 @@ int outband_init(ch_t *ch)
 static void
 chipinit(ch_t *ch, uint options)
 {
-printf("chipinit send\n\n");
 	etc_info_t *etc;
 	gmacregs_t *regs;
 	uint idx;
@@ -1578,7 +1577,6 @@ printf("chipinit send\n\n");
 	gmac_enable(ch);
 
 	static int once = 0;
-	printf("etc->uint = %d\n",etc->unit);
 	if((0 == etc->unit) && (0 == once))
 	{
 		outband_init(ch);
@@ -1591,7 +1589,6 @@ printf("chipinit send\n\n");
 static bool BCMFASTPATH
 chiptx(ch_t *ch, void *p0)
 {
-printf("chiptx send\n");
 	int error, len;
 	uint32 q = TX_Q0;
 
@@ -1623,7 +1620,6 @@ printf("chiptx send\n");
 
 	error = dma_txfast(ch->di[q], p0, TRUE);
 
-printf("chiptx send dma_txfast %d\n",error);
 	if (error) {
 		ET_ERROR(("et%d: chiptx: out of txds\n", ch->etc->unit));
 		ch->etc->txnobuf++;
@@ -1641,7 +1637,6 @@ printf("chiptx send dma_txfast %d\n",error);
 		}
 	}
 
-printf("chiptx send ok\n\n");
 	return TRUE;
 }
 
@@ -1649,7 +1644,6 @@ printf("chiptx send ok\n\n");
 static void BCMFASTPATH
 chiptxreclaim(ch_t *ch, bool forceall)
 {
-printf("chiptxreclaim send\n");
 	int32 idx;
 
 	ET_TRACE(("et%d: chiptxreclaim\n", ch->etc->unit));
@@ -1664,7 +1658,6 @@ printf("chiptxreclaim send\n");
 static void * BCMFASTPATH
 chiprx(ch_t *ch)
 {
-printf("chiptxreclaim send\n\n");
 	void *p;
 	struct ether_addr *da;
 
@@ -1735,7 +1728,6 @@ printf("chiptxreclaim send\n\n");
 static void
 chiprxreclaim(ch_t *ch)
 {
-printf("chiptxreclaim send\n\n");
 	ET_TRACE(("et%d: chiprxreclaim\n", ch->etc->unit));
 	dma_rxreclaim(ch->di[RX_Q0]);
 	ch->intstatus &= ~I_RI;

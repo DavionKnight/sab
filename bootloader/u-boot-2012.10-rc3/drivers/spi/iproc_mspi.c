@@ -23,8 +23,8 @@ void reset_by_gpio2()
 	udelay(20000);
 	bcmgpio_directory_output(13, 1);
 
-#if 1
-	udelay(5000000);
+#if 1 /*send bcm5482 reset info to fpga*/
+	udelay(2000000);
 
 	unsigned int data[2];
 
