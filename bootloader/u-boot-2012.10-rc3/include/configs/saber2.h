@@ -475,6 +475,7 @@
 #define CONFIG_PHYLIB /*add vsc8211 phy */
 #define CONFIG_PHY_VITESSE
 #define VSC8211_ADDR	0x5
+#define CONFIG_ENV_OVERWRITE
 
 #define CONFIG_CMD_PCI
 #define CONFIG_PCI

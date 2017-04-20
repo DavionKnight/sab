@@ -209,6 +209,7 @@ int fac_env_check(void)
 	/* load & check factory env into env */
 	{
 		char *pvalue;
+		char *eth0mac;
 
 	    /* set serial# ethaddr and MacExt if not yet defined */
 	    pvalue = getfacenv("Serial#");
@@ -218,7 +219,13 @@ int fac_env_check(void)
 	    
 	    pvalue = getfacenv("1st_MAC");
 	    if (pvalue != NULL && pvalue[9] != 'X') {
-	        setenv ("eth0addr", pvalue);
+			eth0mac = getenv("ethaddr");	
+			if(strncmp(eth0mac, pvalue, 17))
+			{
+	        	setenv ("ethaddr", pvalue);
+				puts("ethaddr update form factory info,saveenv\n");
+				saveenv();
+			}
 	    } else {
 	    	puts ("*** Error - MacAddress is not set in factory setting \n\n");
 	    }

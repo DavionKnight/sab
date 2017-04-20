@@ -22,7 +22,9 @@
 #
 
 #VERSION =  v001r001 
-VERSION =  v001r002 #add factory info
+#VERSION =  v001r002 #add factory info
+#VERSION =  v001r003 #002 can not set ethaddr
+VERSION =  v001r004 #003 kernel eth0 mac error, fac info 1st_MAC should save to env nand
 PATCHLEVEL =   
 SUBLEVEL =
 EXTRAVERSION = HT201
