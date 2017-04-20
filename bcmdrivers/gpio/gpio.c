@@ -339,10 +339,12 @@ iproc_gpio_irq_handler_ccb(int irq, void *dev)
     int iter, max_pin;
     unsigned int  val;
 
+printk("come in iproc_gpio_irq_handler_ccb\n");
     val = _iproc_gpio_readl(ourchip, IPROC_GPIO_CCB_INT_MSTAT);
     if(!val){
         return IRQ_NONE;
     }
+printk("come in iproc_gpio_irq_handler_ccbv val = 0x%x\n",val);
 
 	max_pin = ourchip->pin_offset + ourchip->chip.ngpio;
     for (iter = ourchip->pin_offset; iter < max_pin; iter ++) {
@@ -1024,6 +1026,12 @@ void __init  iproc_gpiolib_add(struct iproc_gpio_chip *chip)
     }
     iproc_gpio_dev[dev] = chip;
     dev++;
+	printk("\nset gpio7 irq\n");
+	unsigned int irq_gpio7 = chip->irq_base+chip->pin_offset+7;
+	iproc_gpio_dev[0]->irqcfg->set_type(irq_gpio7, IRQ_TYPE_EDGE_FALLING);
+	iproc_gpio_dev[0]->irqcfg->ack(irq_gpio7);
+	iproc_gpio_dev[0]->irqcfg->unmask(irq_gpio7);
+
 }
 
 static int __init gpio_init(void)
