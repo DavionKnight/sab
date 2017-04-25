@@ -206,7 +206,8 @@ static int iproc_set_next_event(unsigned long next,
 	//writel(count, clkevt_base + TIM_COUNT_LO);
 	writel(count >> 32, clkevt_base + TIMER_COMP_HI);
 
-	ctrl |= (TIMER_CMP | TIMER_IRQ);
+//	ctrl |= (TIMER_CMP | TIMER_IRQ);
+	ctrl |= (TIMER_CMP | TIMER_IRQ | TIMER_AUTO);
 	writel(ctrl, clkevt_base + TIMER_CTRL);
 
 	return 0;
