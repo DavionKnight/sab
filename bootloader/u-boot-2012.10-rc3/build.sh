@@ -9,12 +9,12 @@
 #  Last Modified      	:2017/01/19 15:22
 #  Description    	:
 #
-#export PATH=$PATH:/opt/arm/usr/bin
+export PATH=$PATH:/opt/arm/usr/bin
 cd ../../buildroot
 make saber2-uboot_defconfig
 make clean
 make
-cp output/images/u-boot.bin /mnt/hgfs/D/tmp/u-boot-saber2.bin-2
-cp output/images/u-boot.bin /tftpboot/u-boot-saber2.bin
+#cp output/images/u-boot.bin /mnt/hgfs/D/tmp/u-boot-saber2.bin-2
+cp output/images/u-boot.bin /home/work/tftpboot/u-boot-saber2.bin
 echo "cp u-boot-saber2.bin to tftpboot OK"
 

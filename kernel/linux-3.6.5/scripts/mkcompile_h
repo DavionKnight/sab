@@ -6,7 +6,7 @@ SMP=$3
 PREEMPT=$4
 CC=$5
 
-myver=v001r001
+myver=v001r002
 
 vecho() { [ "${quiet}" = "silent_" ] || echo "$@" ; }
 
