@@ -483,6 +483,7 @@
 
 /*ubi part kernel1 4096,the value 4096 is in MT29F16G08CBACA flash
 when using spansion, change to 2048,and CONFIG_SYS_MALLOC to 0x100000*/
+#if 0
 #define CONFIG_EXTRA_ENV_SETTINGS       \
 "format=mtdparts delall;mtdparts default;saveenv;nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;nand erase.part application;ubi part application 2048;ubi create home;nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
 "dnu=tftp 0x61000000 u-boot-saber2.bin;sf probe 0;sf erase 0x0 0x200000;\
@@ -498,5 +499,22 @@ sf write 0x61000000 0x0 0x200000\0" \
 "ethaddr=00:1d:80:01:03:05\0" \   
 "ipaddr=192.168.0.33\0" \   
 "serverip=192.168.0.88\0"
+#endif
+
+#define CONFIG_EXTRA_ENV_SETTINGS       \
+"format=mtdparts delall;mtdparts default;saveenv;nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;nand erase.part application;ubi part application 2048;ubi create home;nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
+"dnu=tftp 0x61000000 u-boot-saber2.bin;\0"\
+"CreateSystem1=nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;ubi info 1\0"\
+"CreateSystem2=nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;ubi info 1\0"\
+"dnkall=run dnk1;run dnk2;\0" \
+"dnk1=run CreateSystem1;tftp 0x61007fc0 saber2-ubi.fs;ubi write 0x61007fc0 kernel1 $filesize;ubifsmount kernel1;ubifsls\0" \
+"dnk2=run CreateSystem2;tftp 0x61007fc0 saber2-ubi.fs;ubi write  0x61007fc0 kernel2 $filesize';ubifsmount kernel2;ubifsls\0" \
+"clrenv=sf probe 0;sf erase 0x200000 0x200000\0" \
+"bootargs=initrd=0x62000040,0xd60000 root=/dev/ram0 console=ttyS0,115200n8 maxcpus=1 mem=480M\0" \
+"bootcmd=ubi part kernel1 2048;ubifsmount kernel1;ubifsload 0x61007fc0 uImage;ubifsload 0x62000000 rootfs;bootm 0x61007fc0 0x62000000\0" \   
+"ethaddr=00:1d:80:01:03:05\0" \   
+"ipaddr=192.168.0.33\0" \   
+"serverip=192.168.0.88\0"
+
 
 #endif /* __SABER2_H */

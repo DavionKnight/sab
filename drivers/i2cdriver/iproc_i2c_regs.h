@@ -16,6 +16,7 @@
 
 #ifndef __IPROC_SMBUS_REGS_H__
 #define __IPROC_SMBUS_REGS_H__
+/* I2C ¼Ä´æÆ÷¶¨Òå */
 
 /* --- */
 #define CCB_SMB_CFG_REG 0x0

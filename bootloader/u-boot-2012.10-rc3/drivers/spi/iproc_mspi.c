@@ -26,13 +26,13 @@ void reset_by_gpio2()
 #if 1 /*send bcm5482 reset info to fpga*/
 	udelay(2000000);
 
-	unsigned int data[2];
+	unsigned char data[2];
 
 	bcmgpio_directory_output(11, 1);
 	bcmgpio_directory_output(12, 1);
 	udelay(10000);
 	fpga_spi_read(0x40, data, 2);
-	data[0] &= 0xfe; 
+	data[1] &= 0xfe; 
 	fpga_spi_write(0x40,data, 2);
 	udelay(10000);
 #endif
@@ -48,7 +48,7 @@ void reset_by_gpio2()
 #if 1
 	memset(data, 0, 2);
 	fpga_spi_read(0x40, data, 2);
-	data[0] |= 0x1; 
+	data[1] |= 0x1; 
 	udelay(10000);
 	fpga_spi_write(0x40,data, 2);
 	memset(data, 0, 2);

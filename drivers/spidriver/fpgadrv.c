@@ -267,6 +267,13 @@ void fpga_flash_gpio_set ( unsigned char en )
 	return;
     gpio_direction_output (11 ,en);
 #endif
+
+#if defined(H20RN181_ARM)
+    if(en > 1)
+	return;
+    gpio_direction_output (10 ,en);
+#endif
+
 #if 0
     /*gpioout:0x18000064---gpioouten:0x18000068*/
     unsigned int *virt_addr_out, *virt_addr_outen;
@@ -393,7 +400,7 @@ int fpga_flash_erase ( void )
     fpga_flash_gpio_set ( 0 );
 
     /* Wait until finished previous write command. */
-
+printf("##### start erase fpga flash #####\n");
     if ( fpga_flash_wait_till_ready() )
     {
         printf ( "flash is not ready!\n" );
@@ -417,7 +424,7 @@ int fpga_flash_erase ( void )
     fpga_flash_gpio_set ( 1 );
     semop ( spidrv_semid, &spidrv_sembufUnlock, 1 );
     for ( i = 0; i < 10000; i++ ); /*yu20160711*/
-
+printf("##### fpga flash erase end #####\n");
     return 0;
 }
 

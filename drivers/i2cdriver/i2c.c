@@ -30,125 +30,107 @@
 #include "i2cdrv.h"
 
 
-
-
-/* local debug macro */
-//#undef IPROC_I2C_DBG
-#define IPROC_I2C_DBG
-
-#undef debug
-#ifdef IPROC_I2C_DBG
-#define debug(fmt,args...)	printf (fmt ,##args)
-#else
-#define debug(fmt,args...)
-#endif /* I2C_DEBUG */
-
-static int  i2c_init_done = 0;
-
-//addby lihz
 /* I2C */
 #define CONFIG_HARD_I2C
 #define CONFIG_DRIVER_DAVINCI_I2C
-#define CONFIG_SYS_I2C_SPEED		400000
-#define CONFIG_SYS_I2C_SLAVE		0x10	/* SMBus host address */
+#define CONFIG_SYS_I2C_SPEED        400000
+#define CONFIG_SYS_I2C_SLAVE        0x10    /* SMBus host address */
 
 extern unsigned int *mapbase;
 
 
-static unsigned int iproc_i2c_reg_read(unsigned int reg_addr)
+static unsigned int iproc_i2c_reg_read ( unsigned int reg_addr )
 {
     unsigned int val;
+    //printf("mapbase[0] + reg_addr = %x\n", mapbase[0] + reg_addr);
 
-    return (*((volatile unsigned int *)(mapbase + reg_addr)));
+    return ( * ( ( volatile unsigned int * ) ( mapbase + reg_addr ) ) );
 }
 
-static int iproc_i2c_reg_write(unsigned int reg_addr, unsigned int val)
+static int iproc_i2c_reg_write ( unsigned int reg_addr, unsigned int val )
 {
-	(*((volatile unsigned int *)(mapbase + reg_addr)) = (val));
-    return (0);
-}
-
-
-static int iproc_i2c_startbusy_wait(void)
-{
-	unsigned int regval;
-
-	regval = iproc_i2c_reg_read(CCB_SMB_MSTRCMD_REG);
-
-	/* Check if an operation is in progress. During probe it won't be.
-	 * But when shutdown/remove was called we want to make sure that
-	 * the transaction in progress completed
-	 */
-	if (regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK) {
-		unsigned int i = 0;
-
-		do {
-			   usleep(10000); /* Wait for 1 msec */
-			   i++;
-			   regval = iproc_i2c_reg_read(CCB_SMB_MSTRCMD_REG);
-
-		  /* If start-busy bit cleared, exit the loop */
-		} while ((regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK) &&
-				 (i < IPROC_SMB_MAX_RETRIES));
-
-		if (i >= IPROC_SMB_MAX_RETRIES) {
-			printf("%s: START_BUSY bit didn't clear, exiting\n",
-				   __func__);;
-			return -1;
-		}
-	}
-	return 0;
+    ( * ( ( volatile unsigned int * ) ( mapbase + reg_addr ) ) = ( val ) );
+    return ( 0 );
 }
 
 
-
-static void iproc_i2c_write_trans_data(unsigned short dev_addr, struct iproc_xact_info *info)
+static int iproc_i2c_startbusy_wait ( void )
 {
-	unsigned int regval;
-	unsigned int i;
-	unsigned int num_data_bytes = 0;
+    unsigned int regval;
 
-    iproc_i2c_reg_write(CCB_SMB_MSTRDATAWR_REG, dev_addr);
+    regval = iproc_i2c_reg_read ( CCB_SMB_MSTRCMD_REG );
 
-    if (info->cmd_valid) 
-	{
-        iproc_i2c_reg_write(CCB_SMB_MSTRDATAWR_REG, info->command);
+    if ( regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK )
+    {
+        unsigned int i = 0;
+
+        do
+        {
+            usleep ( 10000 ); /* Wait for 1 msec */
+            i++;
+            regval = iproc_i2c_reg_read ( CCB_SMB_MSTRCMD_REG );
+
+            /* If start-busy bit cleared, exit the loop */
+        }
+        while ( ( regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK ) && ( i < IPROC_SMB_MAX_RETRIES ) );
+
+        if ( i >= IPROC_SMB_MAX_RETRIES )
+        {
+            printf ( "%s: START_BUSY bit didn't clear, exiting\n", __func__ );;
+            return -1;
+        }
+    }
+    return 0;
+}
+
+
+static void iproc_i2c_write_trans_data ( unsigned short dev_addr, struct iproc_xact_info *info )
+{
+    unsigned int regval;
+    unsigned int i;
+    unsigned int num_data_bytes = 0;
+
+    iproc_i2c_reg_write ( CCB_SMB_MSTRDATAWR_REG, dev_addr );
+
+    if ( info->cmd_valid )
+    {
+        iproc_i2c_reg_write ( CCB_SMB_MSTRDATAWR_REG, info->command );
     }
 
-    switch (info->smb_proto) 
-	{
+    switch ( info->smb_proto )
+    {
 
-        case SMBUS_PROT_RECV_BYTE:
-            /* No additional data to be written */
-            num_data_bytes = 0;
+    case SMBUS_PROT_RECV_BYTE:
+        /* No additional data to be written */
+        num_data_bytes = 0;
         break;
 
-        case SMBUS_PROT_SEND_BYTE:
-            num_data_bytes = info->size;
+    case SMBUS_PROT_SEND_BYTE:
+        num_data_bytes = info->size;
         break;
 
-        case SMBUS_PROT_RD_BYTE:
-        case SMBUS_PROT_RD_WORD:
-        case SMBUS_PROT_BLK_RD:
-            /* Write slave address with R/W~ set (bit #0) */
-            iproc_i2c_reg_write(CCB_SMB_MSTRDATAWR_REG, dev_addr | 0x1);
-            num_data_bytes = 0;
+    case SMBUS_PROT_RD_BYTE:
+    case SMBUS_PROT_RD_WORD:
+    case SMBUS_PROT_BLK_RD:
+        /* Write slave address with R/W~ set (bit #0) */
+        iproc_i2c_reg_write ( CCB_SMB_MSTRDATAWR_REG, dev_addr | 0x1 );
+        num_data_bytes = 0;
         break;
-        case SMBUS_PROT_WR_BYTE:
-        case SMBUS_PROT_WR_WORD:
-            /* No additional bytes to be written. Data portion is written in the
-             * 'for' loop below
-             */
-            num_data_bytes = info->size;
-        break;
-
-        case SMBUS_PROT_BLK_WR:
-            /* 3rd byte is byte count */
-            iproc_i2c_reg_write(CCB_SMB_MSTRDATAWR_REG, info->size);
-            num_data_bytes = info->size;
+    case SMBUS_PROT_WR_BYTE:
+    case SMBUS_PROT_WR_WORD:
+        /* No additional bytes to be written. Data portion is written in the
+         * 'for' loop below
+         */
+        num_data_bytes = info->size;
         break;
 
-        default:
+    case SMBUS_PROT_BLK_WR:
+        /* 3rd byte is byte count */
+        iproc_i2c_reg_write ( CCB_SMB_MSTRDATAWR_REG, info->size );
+        num_data_bytes = info->size;
+        break;
+
+    default:
         break;
 
     }
@@ -156,261 +138,273 @@ static void iproc_i2c_write_trans_data(unsigned short dev_addr, struct iproc_xac
     /* Copy actual data from caller, next. In general, for reads, no data is
      * copied
      */
-    for (i = 0; num_data_bytes; --num_data_bytes, i++) 
-	{
+    for ( i = 0; num_data_bytes; --num_data_bytes, i++ )
+    {
         /* For the last byte, set MASTER_WR_STATUS bit */
-        regval = (num_data_bytes == 1) ? 
-                  info->data[i] | CCB_SMB_MSTRWRSTS_MASK : info->data[i];
+        regval = ( num_data_bytes == 1 ) ?
+                 info->data[i] | CCB_SMB_MSTRWRSTS_MASK : info->data[i];
 
-        iproc_i2c_reg_write(CCB_SMB_MSTRDATAWR_REG, regval);
+        iproc_i2c_reg_write ( CCB_SMB_MSTRDATAWR_REG, regval );
     }
 
     return;
 }
 
 
-static int iproc_i2c_data_send(unsigned short addr, struct iproc_xact_info *info)
+static int iproc_i2c_data_send ( unsigned short addr, struct iproc_xact_info *info )
 {
-    int rc, retry=3;
+    int rc, retry = 3;
     unsigned int regval;
 
     rc = iproc_i2c_startbusy_wait();
 
-    if (rc < 0) 
-	{
-        printf("%s: Send: bus is busy, exiting\n", __func__);
+    if ( rc < 0 )
+    {
+        printf ( "%s: Send: bus is busy, exiting\n", __func__ );
         return rc;
     }
 
-    iproc_i2c_write_trans_data(addr, info);
+    iproc_i2c_write_trans_data ( addr, info );
 
-    regval = (info->smb_proto << CCB_SMB_MSTRSMBUSPROTO_SHIFT) |
-              CCB_SMB_MSTRSTARTBUSYCMD_MASK;
+    regval = ( info->smb_proto << CCB_SMB_MSTRSMBUSPROTO_SHIFT ) |
+             CCB_SMB_MSTRSTARTBUSYCMD_MASK;
 
-    iproc_i2c_reg_write(CCB_SMB_MSTRCMD_REG, regval);
+    iproc_i2c_reg_write ( CCB_SMB_MSTRCMD_REG, regval );
 
-    regval = iproc_i2c_reg_read(CCB_SMB_MSTRCMD_REG);
-    while(regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK)
+    regval = iproc_i2c_reg_read ( CCB_SMB_MSTRCMD_REG );
+    while ( regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK )
     {
-        usleep(10000);
-        if(retry-- <=0) break;
-        regval = iproc_i2c_reg_read(CCB_SMB_MSTRCMD_REG);
-    }        
+        usleep ( 10000 );
+        if ( retry-- <= 0 )
+        {
+            break;
+        }
+        regval = iproc_i2c_reg_read ( CCB_SMB_MSTRCMD_REG );
+    }
 
-    if (!(regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK)) 
-	{
+    if ( ! ( regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK ) )
+    {
         regval &= CCB_SMB_MSTRSTS_MASK;
         regval >>= CCB_SMB_MSTRSTS_SHIFT;
 
-        if (regval != MSTR_STS_XACT_SUCCESS) 
-		{
-            printf("%s: ERROR: Send: Error in transaction %u, exiting",
-                   __func__, regval);
-           return -1;//EREMOTEIO;
+        if ( regval != MSTR_STS_XACT_SUCCESS )
+        {
+            printf ( "%s: ERROR: Send: Error in transaction %u, exiting",
+                     __func__, regval );
+            return -1;//EREMOTEIO;
         }
     }
 
-    return(0);
+    return ( 0 );
 }
 
 
-static int iproc_i2c_data_recv(unsigned short addr,
-                               struct iproc_xact_info *info,
-                               unsigned int *num_bytes_read)
+static int iproc_i2c_data_recv ( unsigned short addr,
+                                 struct iproc_xact_info *info,
+                                 unsigned int *num_bytes_read )
 {
-    int rc, retry=3;
+    int rc, retry = 3;
     unsigned int regval;
 
-    /* Make sure the previous transaction completed */
     rc = iproc_i2c_startbusy_wait();
 
-    if (rc < 0) {
-        printf("%s: Receive: Bus is busy, exiting\n", __func__);
+    if ( rc < 0 )
+    {
+        printf ( "%s: Receive: Bus is busy, exiting\n", __func__ );
         return rc;
     }
 
-    /* Program all transaction bytes into master Tx FIFO */
-    iproc_i2c_write_trans_data(addr, info);
+    iproc_i2c_write_trans_data ( addr, info );
 
-    /* Program master command register (0x30) with protocol type and set
-     * start_busy_command bit to initiate the write transaction
-     */
-    regval = (info->smb_proto << CCB_SMB_MSTRSMBUSPROTO_SHIFT) |
-              CCB_SMB_MSTRSTARTBUSYCMD_MASK | info->size;
+    regval = ( info->smb_proto << CCB_SMB_MSTRSMBUSPROTO_SHIFT ) |
+             CCB_SMB_MSTRSTARTBUSYCMD_MASK | info->size;
 
 
-    iproc_i2c_reg_write(CCB_SMB_MSTRCMD_REG, regval);
+    iproc_i2c_reg_write ( CCB_SMB_MSTRCMD_REG, regval );
 
-    /* Check for Master status */
-    regval = iproc_i2c_reg_read(CCB_SMB_MSTRCMD_REG);
-	
-    while(regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK)
+    regval = iproc_i2c_reg_read ( CCB_SMB_MSTRCMD_REG );
+
+    while ( regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK )
     {
-        usleep(1000);
-        if(retry-- <=0) break;
-        regval = iproc_i2c_reg_read(CCB_SMB_MSTRCMD_REG);
-    } 
+        usleep ( 1000 );
+        if ( retry-- <= 0 )
+        {
+            break;
+        }
+        regval = iproc_i2c_reg_read ( CCB_SMB_MSTRCMD_REG );
+    }
 
-    /* If start_busy bit cleared, check if there are any errors */
-    if (!(regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK)) 
-	{
-
-        /* start_busy bit cleared, check master_status field now */
+    if ( ! ( regval & CCB_SMB_MSTRSTARTBUSYCMD_MASK ) )
+    {
         regval &= CCB_SMB_MSTRSTS_MASK;
         regval >>= CCB_SMB_MSTRSTS_SHIFT;
 
-        if (regval != MSTR_STS_XACT_SUCCESS) 
-		{
-            /* We can flush Tx FIFO here */
-            printf("%s: Error in transaction %d, exiting\n",
-                   __func__, regval);
-           return -1;//EREMOTEIO;
+        if ( regval != MSTR_STS_XACT_SUCCESS )
+        {
+            printf ( "%s: Error in transaction %d, exiting\n",
+                     __func__, regval );
+            return -1;//EREMOTEIO;
         }
     }
 
-    /* Read received byte(s), after TX out address etc */
-    regval = iproc_i2c_reg_read(CCB_SMB_MSTRDATARD_REG);
+    regval = iproc_i2c_reg_read ( CCB_SMB_MSTRDATARD_REG );
 
-    /* For block read, protocol (hw) returns byte count, as the first byte */
-    if (info->smb_proto == SMBUS_PROT_BLK_RD) 
-	{
+    if ( info->smb_proto == SMBUS_PROT_BLK_RD )
+    {
 
         int i;
 
         *num_bytes_read = regval & CCB_SMB_MSTRRDDATA_MASK;
 
-        /* Limit to reading a max of 32 bytes only; just a safeguard. If
-         * # bytes read is a number > 32, check transaction set up, and contact
-         * hw engg. Assumption: PEC is disabled 
-         */
-        for (i = 0; (i < *num_bytes_read) && (i < I2C_SMBUS_BLOCK_MAX); i++) 
-		{
+        for ( i = 0; ( i < *num_bytes_read ) && ( i < I2C_SMBUS_BLOCK_MAX ); i++ )
+        {
 
-            /* Read Rx FIFO for data bytes */
-            regval = iproc_i2c_reg_read(CCB_SMB_MSTRDATARD_REG);
+            regval = iproc_i2c_reg_read ( CCB_SMB_MSTRDATARD_REG );
             info->data[i] = regval & CCB_SMB_MSTRRDDATA_MASK;
         }
-    } 
-	else if (info->size == 2) 
+    }
+    else if ( info->size == 2 )
     {
         /* 2 Bytes data */
         info->data[0] = regval & CCB_SMB_MSTRRDDATA_MASK;
-        regval = iproc_i2c_reg_read(CCB_SMB_MSTRDATARD_REG);
+        regval = iproc_i2c_reg_read ( CCB_SMB_MSTRDATARD_REG );
         info->data[1] = regval & CCB_SMB_MSTRRDDATA_MASK;
         *num_bytes_read = 2;
     }
-    else 
-	{
+    else
+    {
         /* 1 Byte data */
-        *(info->data) = regval & CCB_SMB_MSTRRDDATA_MASK;
+        * ( info->data ) = regval & CCB_SMB_MSTRRDDATA_MASK;
         *num_bytes_read = 1;
     }
 
-    return(0);
+    return ( 0 );
 }
 
 
-static int iproc_i2c_set_clk_freq(smb_clk_freq_t freq)
+static int iproc_i2c_set_clk_freq ( smb_clk_freq_t freq )
 {
     unsigned int regval;
     unsigned int val;
 
-    switch (freq) 
-	{
+    switch ( freq )
+    {
 
-        case I2C_SPEED_100KHz:
-            val = 0;
-            break;
+    case I2C_SPEED_100KHz:
+        val = 0;
+        break;
 
-        case I2C_SPEED_400KHz:
-            val = 1;
-            break;
+    case I2C_SPEED_400KHz:
+        val = 1;
+        break;
 
-        default:
-			printf("iproc_i2c_set_clk_freq default\n");//addby lihz
-            return -1;//EINVAL;
-            break;
+    default:
+        printf ( "iproc_i2c_set_clk_freq default\n" ); //addby lihz
+        return -1;//EINVAL;
+        break;
     }
-    
-    regval = iproc_i2c_reg_read(CCB_SMB_TIMGCFG_REG);
 
-    SETREGFLDVAL(regval, val, CCB_SMB_TIMGCFG_MODE400_MASK, CCB_SMB_TIMGCFG_MODE400_SHIFT);
+    regval = iproc_i2c_reg_read ( CCB_SMB_TIMGCFG_REG );
 
-    iproc_i2c_reg_write(CCB_SMB_TIMGCFG_REG, regval);
-    return(0);
+    SETREGFLDVAL ( regval, val, CCB_SMB_TIMGCFG_MODE400_MASK, CCB_SMB_TIMGCFG_MODE400_SHIFT );
+
+    iproc_i2c_reg_write ( CCB_SMB_TIMGCFG_REG, regval );
+    return ( 0 );
 }
 
-static void iproc_i2c_init (int speed, int slaveadd)
+static void iproc_i2c_init ( int speed, int slaveadd )
 {
     unsigned int regval;
 
     regval = CCB_SMB_MSTRRXFIFOFLSH_MASK | CCB_SMB_MSTRTXFIFOFLSH_MASK;
-    iproc_i2c_reg_write(CCB_SMB_MSTRFIFOCTL_REG, regval);
+    iproc_i2c_reg_write ( CCB_SMB_MSTRFIFOCTL_REG, regval );
 
-    regval = iproc_i2c_reg_read(CCB_SMB_CFG_REG);
-	
+    regval = iproc_i2c_reg_read ( CCB_SMB_CFG_REG );
+
     regval |= CCB_SMB_CFG_SMBEN_MASK;
-    iproc_i2c_reg_write(CCB_SMB_CFG_REG, regval);
-	
-    usleep(10000);/* 至少延时50us */
+    iproc_i2c_reg_write ( CCB_SMB_CFG_REG, regval );
 
-    iproc_i2c_set_clk_freq(I2C_SPEED_100KHz);
+    usleep ( 10000 ); /* 至少延时50us */
+
+    iproc_i2c_set_clk_freq ( I2C_SPEED_100KHz );
 
     regval = 0x0;
-    iproc_i2c_reg_write(CCB_SMB_EVTEN_REG, regval);
+    iproc_i2c_reg_write ( CCB_SMB_EVTEN_REG, regval );
 
-    regval = iproc_i2c_reg_read(CCB_SMB_EVTSTS_REG);    
-    iproc_i2c_reg_write(CCB_SMB_EVTSTS_REG, regval);
-
-    i2c_init_done = 1;
-}
-
-
-void i2c_init (int speed, int slaveadd)
-{
-
-//by lihz
-//#ifdef CONFIG_I2C_MULTI_BUS
-    //unsigned int old_bus;
-    //old_bus = i2c_get_bus_num();
-
-	//i2c_set_bus_num(0);               
-    iproc_i2c_init(speed, slaveadd);
-//while(1){sleep(1);}
-    //i2c_set_bus_num(1);
-    //iproc_i2c_init(speed, slaveadd);
-
-    //i2c_set_bus_num(old_bus); /* tianzhy */
-//#else
-//   iproc_i2c_init(speed, slaveadd);
-//#endif
+    regval = iproc_i2c_reg_read ( CCB_SMB_EVTSTS_REG );
+    iproc_i2c_reg_write ( CCB_SMB_EVTSTS_REG, regval );
 
 }
 
-static int i2c_read_byte (unsigned char devaddr, unsigned char regoffset, unsigned char * value)
+
+void i2c_init ( int speed, int slaveadd )
 {
-	int rc;
-	struct iproc_xact_info info;
-	unsigned int num_bytes_read = 0;
+    int aaa = 0;
 
-	devaddr <<= 1;
+    iproc_i2c_init ( speed, slaveadd );
+#if 0
+    aaa = iproc_i2c_reg_read ( 0x02 );
+    printf ( "aaa = %d, %p\n", aaa, mapbase + 0x02 );
+    iproc_i2c_reg_write ( 0x02, 0xa5 );
 
-	info.cmd_valid = 1;
-	info.command = (unsigned char)regoffset;
-	info.data = value;
-	info.size = 1;
-	info.flags = 0;
-	info.smb_proto = SMBUS_PROT_RD_BYTE;
-	/* Refer to i2c_smbus_read_byte for params passed. */
-	rc = iproc_i2c_data_recv(devaddr, &info, &num_bytes_read);
+    iproc_i2c_reg_read ( 0x02 );
+    printf ( "aaa = %d\n", aaa );
+#endif
 
-	if (rc < 0) {
-		printf("%s: %s error accessing device 0x%X\n", 
-					__func__, "Read", devaddr);
-		return -1;
-	}
+}
 
-	return (0);
+static int i2c_read_byte ( unsigned char devaddr, unsigned char regoffset, unsigned char *value )
+{
+    int rc;
+    struct iproc_xact_info info;
+    unsigned int num_bytes_read = 0;
+
+    devaddr <<= 1;
+
+    info.cmd_valid = 1;
+    info.command = ( unsigned char ) regoffset;
+    info.data = value;
+    info.size = 1;
+    info.flags = 0;
+    info.smb_proto = SMBUS_PROT_RD_BYTE;
+    /* Refer to i2c_smbus_read_byte for params passed. */
+    rc = iproc_i2c_data_recv ( devaddr, &info, &num_bytes_read );
+
+    if ( rc < 0 )
+    {
+        printf ( "%s: %s error accessing device 0x%X\n",
+                 __func__, "Read", devaddr );
+        return -1;
+    }
+
+    return ( 0 );
+}
+
+static int i2c_write_byte ( unsigned char devaddr, unsigned char regoffset, unsigned char value )
+{
+    int rc;
+    struct iproc_xact_info info;
+
+
+    devaddr <<= 1;
+
+    info.cmd_valid = 1;
+    info.command = ( unsigned char ) regoffset;
+    info.data = &value;
+    info.size = 1;
+    info.flags = 0;
+    info.smb_proto = SMBUS_PROT_WR_BYTE;
+
+    rc = iproc_i2c_data_send ( devaddr, &info );
+
+    if ( rc < 0 )
+    {
+        printf ( "%s: %s error accessing device 0x%X\n",
+                 __func__, "Write", devaddr );
+        return -1;//EREMOTEIO;
+    }
+
+    return ( 0 );
 }
 
 
@@ -441,33 +435,6 @@ int i2c_read (unsigned char chip, unsigned int addr, int alen, unsigned char * b
 	}
 
 	return 0;
-}
-
-static int i2c_write_byte (unsigned char devaddr, unsigned char regoffset, unsigned char value)
-{
-    int rc;
-    struct iproc_xact_info info;
-
-
-    devaddr <<= 1;
-
-    info.cmd_valid = 1;
-    info.command = (unsigned char)regoffset;
-    info.data = &value; 
-    info.size = 1;
-    info.flags = 0;
-    info.smb_proto = SMBUS_PROT_WR_BYTE;
-
-    rc = iproc_i2c_data_send(devaddr, &info);
-
-    if (rc < 0) 
-	{
-        printf("%s: %s error accessing device 0x%X\n", 
-                    __func__, "Write", devaddr);
-        return -1;//EREMOTEIO;
-    }
-
-    return (0);
 }
 
 int i2c_write (unsigned char chip, unsigned int addr, int alen, unsigned char * buffer, int len)

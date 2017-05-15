@@ -50,22 +50,28 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	char buf[10];
+	
+	dpll_read(0x00,buf, 2);
+	printf("##### test: 0x%x 0x%x\n", buf[0], buf[1]);
+	
 	if (argc == 2 && argv[1][0] == 't') {
 	//	selftest(fd);
 	}
-	else if (argc == 4 && argv[1][0] == 'r') {
-
-                sscanf(argv[2], "%hx", &addr);
-                sscanf(argv[3], "%hd", &len);
-                printf("read %d bytes at 0x%04x:", len, (unsigned short)addr);
+	else if (argc == 4 && argv[1][0] == 'r') 
+	{
+		sscanf(argv[2], "%hx", &addr);
+		sscanf(argv[3], "%hd", &len);
+		printf("read %d bytes at 0x%04x:", len, (unsigned short)addr);
 		if(!dpll_read(addr,(unsigned char *)data, len))
 		{
 			pdata(data, len);
 			printf(" done\n");
-                } else {
-                        printf(" error\n");
-                }
-	
+        } 
+		else 
+		{
+            printf(" error\n");
+        }
 	}
 	else if (argc == 4 && argv[1][0] == 'w') {
                 sscanf(argv[2], "%hx", &addr);

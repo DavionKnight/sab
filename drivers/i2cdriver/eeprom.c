@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	int i,value,ret;	
 	int count = 0,flag=0; 
 	unsigned int addr = 0;
-	unsigned int offset = 0;
+	unsigned int chip = 0;
 	unsigned char data[32] = {0};
 	int chip_select = 0;
 
@@ -41,52 +41,31 @@ int main(int argc, char *argv[])
 	{
 		return -1;
 	}
-	virt_addr = (unsigned int *) mmap ( NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0x18008000 );
-
-	printf("------mapbase=%p------\n",virt_addr);
-
-	printf("------i2c_init before!!!------\n");
-	value = i2cdrv_init(virt_addr);
-	printf("------i2c_init finished!!!------\n");
 
 
-//value = eeprom_read(0x56,0x0c,data,2);
-//i2c_read ( 0x51, 2, 0, data, 1);
-
-
-//for (i = 0 ; i < count ; i++)
-//	printf(" %02x",data[i]);
-//printf(" \n");	
-
-
-//return 0;
-	if (argc == 5 && argv[1][0] == 'r') 
+	sscanf(argv[2], "%d", &chip_select);
+	if(chip_select == 1)
 	{
-		sscanf(argv[2], "%x", &addr);
-		sscanf(argv[3], "%x", &offset);
-		sscanf(argv[4], "%d", &count);
-
-		printf("### addr = %x, offset = %d, count = %d\n", addr, offset, count);
-	  
-		value = eeprom_read(addr,offset,data,count);
-
-
-		//i2c_read ( 0x51, 2, 0, data, 1);
-		//i2c_read (0x56, 0xc, 0, data, 2 );
-
-		//i2c_write (0x56, 0xc, 0, "a5a5", 2);
-
+		virt_addr = (unsigned int *) mmap ( NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0x18008000 );
+	}
+	else
+	{
+		virt_addr = (unsigned int *) mmap ( NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0x1800B000 );
 		
-		for(i = 0; i < count; i++)
-		{
-			printf("0x%x ", data[i]);
+	}
+
+	printf("##### mapbase=%p, chip_select = %d\n", virt_addr, chip_select);
+
+	value = i2cdrv_init(virt_addr);
+
+	if (argc == 6 && argv[1][0] == 'r') 
+	{
+		sscanf(argv[3], "%d", &chip);
+		sscanf(argv[4], "%d", &addr);
+		sscanf(argv[5], "%d", &count);
 		
-		}
-		printf("\n ***** read end ***** \n");
-
-
-
-
+	  	
+		value = eeprom_read(chip,addr,data,count);
 		printf("------eeprom_read finished!!!------\n");
 		if(value)
 			printf("fpga_spi_read failed!\n");		
@@ -96,11 +75,11 @@ int main(int argc, char *argv[])
 		printf(" done\n");	
 		
 	}
-	else if(argc == 4 && argv[1][0] == 'w') 
+	else if(argc == 6 && argv[1][0] == 'w') 
 	{
-		
-		sscanf(argv[2], "%x", &addr);	
-		count = strlen(argv[3]);
+		sscanf(argv[3], "%d", &chip);
+		sscanf(argv[4], "%d", &addr);	
+		count = strlen(argv[5]);
 		if (count % 2 != 0) 
 		{
 			printf("error: unaligned byte:hex\n");
@@ -109,7 +88,7 @@ int main(int argc, char *argv[])
 		{
 			int i; char *cp;
 			unsigned char tmp;
-			cp = argv[3];
+			cp = argv[5];
 			for(i = 0; *cp; i++, cp++) 
 			{
 				tmp = *cp - '0';
@@ -130,7 +109,7 @@ int main(int argc, char *argv[])
 			count >>= 1;
 			printf("write %d bytes at 0x%04x:", count, (unsigned short)addr);			
 	
-			value = eeprom_write(addr,0x0,data,count);
+			value = eeprom_write(chip,addr,data,count);
 			if(value)
 				printf("eeprom i2c write failed!\n");
 			for (i = 0 ; i < count ; i++)

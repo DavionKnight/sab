@@ -16,46 +16,46 @@
 
 int eeprom_read ( unsigned dev_addr, unsigned offset, unsigned char *buffer, unsigned cnt )
 {
-	unsigned end = offset + cnt;
-	unsigned blk_off;
-	int rcode = 0;
+    unsigned end = offset + cnt;
+    unsigned blk_off;
+    int rcode = 0;
 
-	while ( offset < end )
-	{
-		unsigned alen, len;
-		unsigned maxlen;
+    while ( offset < end )
+    {
+        unsigned alen, len;
+        unsigned maxlen;
 
-		unsigned char addr[2];
+        unsigned char addr[2];
 
-		blk_off = offset & 0xFF;	/* block offset */
+        blk_off = offset & 0xFF;    /* block offset */
 
-		addr[0] = offset >> 8;		/* block number */
-		addr[1] = blk_off;		/* block offset */
-		alen	= 2;
+        addr[0] = offset >> 8;      /* block number */
+        addr[1] = blk_off;      /* block offset */
+        alen    = 2;
 
-		addr[0] |= dev_addr;		/* insert device address */
+        addr[0] |= dev_addr;        /* insert device address */
 
-		len = end - offset;
+        len = end - offset;
 
-		maxlen = 0x100 - blk_off;
-		if ( maxlen > I2C_RXTX_LEN )
-		{
-			maxlen = I2C_RXTX_LEN;
-		}
-		if ( len > maxlen )
-		{
-			len = maxlen;
-		}
-printf("dev_addr = %d, offset = %d, alen = %d, len = %d\n ", addr[0], offset, alen - 1, len);
-		if ( i2c_read ( addr[0], offset, alen - 1, buffer, len ) != 0 )
-		{
-			rcode = 1;
-		}
-		buffer += len;
-		offset += len;
-	}
+        maxlen = 0x100 - blk_off;
+        if ( maxlen > I2C_RXTX_LEN )
+        {
+            maxlen = I2C_RXTX_LEN;
+        }
+        if ( len > maxlen )
+        {
+            len = maxlen;
+        }
 
-	return rcode;
+        if ( i2c_read ( addr[0], offset, alen - 1, buffer, len ) != 0 )
+        {
+            rcode = 1;
+        }
+        buffer += len;
+        offset += len;
+    }
+
+    return rcode;
 }
 
 
@@ -106,7 +106,7 @@ int eeprom_write ( unsigned dev_addr, unsigned offset, unsigned char *buffer, un
         buffer += len;
         offset += len;
 
-        usleep (5 * 1000);//( CONFIG_SYS_EEPROM_PAGE_WRITE_DELAY_MS * 1000 );
+        usleep ( 5 * 1000 ); //( CONFIG_SYS_EEPROM_PAGE_WRITE_DELAY_MS * 1000 );
     }
 
     return rcode;

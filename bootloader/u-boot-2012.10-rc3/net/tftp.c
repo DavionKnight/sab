@@ -113,7 +113,9 @@ static char default_filename[DEFAULT_NAME_LEN];
 #define MAX_LEN CONFIG_TFTP_FILE_NAME_MAX_LEN
 #endif
 
-static char tftp_filename[MAX_LEN];
+//chenged by lihz,quotes in net.c -- 2017.5.10
+//static char tftp_filename[MAX_LEN];
+char tftp_filename[MAX_LEN];
 
 /* 512 is poor choice for ethernet, MTU is typically 1500.
  * Minus eth.hdrs thats 1468.  Can get 2x better throughput with

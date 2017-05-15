@@ -206,6 +206,16 @@ static int net_check_prereq(enum proto_t protocol);
 
 static int NetTryCount;
 
+//add by lihz -- 2017.5.10
+
+#ifndef CONFIG_TFTP_FILE_NAME_MAX_LEN
+#define MAX_LEN 128
+#else
+#define MAX_LEN CONFIG_TFTP_FILE_NAME_MAX_LEN
+#endif
+
+extern char tftp_filename[MAX_LEN];
+
 /**********************************************************************/
 
 /*
@@ -527,6 +537,27 @@ restart:
 
 				sprintf(buf, "%lX", (unsigned long)load_addr);
 				setenv("fileaddr", buf);
+
+				if(strncmp(tftp_filename, "u-boot", 6) == 0)
+				{
+					char *argv1[12];
+					argv1[0] = "sf";
+					argv1[1] = "probe";
+					argv1[2] = "0";
+					ret = do_spi_flash(NULL, 0, 3, argv1);
+					argv1[0] = "sf";
+					argv1[1] = "erase";
+					argv1[2] = "0x0";
+					argv1[3] = "0x200000";
+					ret = do_spi_flash(NULL, 0, 4, argv1);
+					argv1[0] = "sf";
+					argv1[1] = "write";
+					argv1[2] = "0x61000000";
+					argv1[3] = "0x0";
+					argv1[4] = "0x200000";
+
+					ret = do_spi_flash(NULL, 0, 5, argv1);
+				}
 			}
 			if (protocol != NETCONS)
 				eth_halt();

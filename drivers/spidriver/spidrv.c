@@ -412,7 +412,7 @@ static void spidrv_mmap_exit()
 
 int spidrv_read(unsigned char *txbuf, int txlen,unsigned char *rxbuf, int rxlen, unsigned char chip_select)
 {
-printf("spidrv_read txlen=%d\n",txlen);
+//printf("spidrv_read txlen=%d\n",txlen);
 	unsigned int value;
 	int ret, len;
 	struct spi_device *spi = &spidev;
