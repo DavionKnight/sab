@@ -89,8 +89,21 @@ struct mspi_hw {
 
 int wait_fpga_load_done()
 {
+	int i = 0;
+
 	bcmgpio_directory_input(6);
-	return bcmgpio_get_value(6);
+
+	do{
+		if(bcmgpio_get_value(6))
+			return 0;
+
+		i++;
+
+		udelay(1000000);	
+
+	}while(i < 10);	
+
+	return 1;
 }
 
 struct mspi_hw *priv;
@@ -102,19 +115,10 @@ int mspi_init(void)
 	
 	printf("wait fpga load...\n");
 
-	int i = 0;
-
-	do{
-
-		i++;
-
-		if((i>10)||(wait_fpga_load_done()))
-			break;
-
-		udelay(1000000);	
-
-	}while(1);	
-	printf("%s\n",i>10?"failed":"successfully");
+	if(wait_fpga_load_done())
+		printf("failed!\n");
+	else
+		printf("successful!\n");
 
 	ptr = (u32*)CMIC_OVERRIDE_STRAP;
 	priv =	 (volatile struct mspi_hw *)(MSPI_REG_BASE + 0x000);
@@ -141,6 +145,7 @@ int mspi_init(void)
 	priv->mspi_spcr1_msb = rval;
 
 	dpll_init_pre();	
+
 	atest();
 
 	reset_by_gpio2();	

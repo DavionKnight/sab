@@ -513,8 +513,8 @@ sf write 0x61000000 0x0 0x200000\0" \
 "bootargs=initrd=0x62000040,0xd60000 root=/dev/ram0 console=ttyS0,115200n8 maxcpus=1 mem=480M\0" \
 "bootcmd=ubi part kernel1 2048;ubifsmount kernel1;ubifsload 0x61007fc0 uImage;ubifsload 0x62000000 rootfs;bootm 0x61007fc0 0x62000000\0" \   
 "ethaddr=00:1d:80:01:03:05\0" \   
-"ipaddr=192.168.0.33\0" \   
-"serverip=192.168.0.88\0"
+"ipaddr=192.168.1.1\0" \   
+"serverip=192.168.1.254\0"
 
 
 #endif /* __SABER2_H */
