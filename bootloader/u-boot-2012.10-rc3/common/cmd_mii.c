@@ -318,7 +318,12 @@ static int do_mspi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (op[0] == 'r') {
 		for (addr = addrlo; addr <= addrhi; addr++) {
 			data = 0xffff;
+#if 0
 			dpll_spi_read_driver(addr, &data, 2);
+#else
+			fpga_spi_read(addr, &data, 2);
+#endif
+
 			printf("addr=%02x reg=%02x data=",
 					(uint)addr, (uint)reg);
 			printf("%04X\n", data & 0x0000FFFF);

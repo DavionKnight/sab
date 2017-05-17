@@ -264,7 +264,7 @@ int mspi_write8( u8 *buf, int len)
 {
     return  mspi_writeread8(buf, len, NULL, 0);
 }
-void fpga_spi_read(unsigned short addr, unsigned char data, size_t count)
+void fpga_spi_read(unsigned short addr, unsigned char *data, size_t count)
 {
 	unsigned short address = 0;
 	unsigned char txbuf[16] = {0};
@@ -293,7 +293,7 @@ printf("addr=%d,count=%d\n",addr, count);
 	mspi_cs_set(0, 1);
 	return 0;
 }
-void fpga_spi_write(unsigned short addr, unsigned char data, size_t count)
+void fpga_spi_write(unsigned short addr, unsigned char *data, size_t count)
 {
 	unsigned short address = 0;
 	unsigned char txbuf[16] = {0};
