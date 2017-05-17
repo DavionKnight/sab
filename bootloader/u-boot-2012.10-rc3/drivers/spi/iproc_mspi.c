@@ -144,9 +144,11 @@ int mspi_init(void)
 	rval |= 0x01; /* DSCLK = 0x01 */
 	priv->mspi_spcr1_msb = rval;
 
+#if 0
 	dpll_init_pre();	
 
 	atest();
+#endif
 
 	reset_by_gpio2();	
 
