@@ -25,7 +25,8 @@
 #VERSION =  v001r002 #add factory info
 #VERSION =  v001r003 #002 can not set ethaddr
 #VERSION =  v001r004 #003 kernel eth0 mac error, fac info 1st_MAC should save to env nand
-VERSION =  v001r005 #004 phy reset signal to fpga error
+#VERSION =  v001r005 #004 phy reset signal to fpga error
+VERSION =  v001r006 #1.run dnu modify 2.HT201E differentiate by fpga id
 PATCHLEVEL =   
 SUBLEVEL =
 EXTRAVERSION = HT201
