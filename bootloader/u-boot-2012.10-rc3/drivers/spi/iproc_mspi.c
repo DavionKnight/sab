@@ -106,6 +106,18 @@ int wait_fpga_load_done()
 	return 1;
 }
 
+#define HT201_DS31400	0x12
+#define HT201_IDT		0x13
+unsigned char get_dpll_type()
+{
+	unsigned char data[2];
+
+	fpga_spi_read(0, data, 2);
+	printf("data=%x %x\n",data[0],data[1]);
+	return data[1];	
+}
+
+
 struct mspi_hw *priv;
 
 int mspi_init(void)
@@ -144,10 +156,10 @@ int mspi_init(void)
 	rval |= 0x01; /* DSCLK = 0x01 */
 	priv->mspi_spcr1_msb = rval;
 
-#if 0
-	dpll_init_pre();	
+#if 1
+		dpll_init_pre();	
 
-	atest();
+//	atest();
 #endif
 
 	reset_by_gpio2();	
@@ -273,7 +285,7 @@ void fpga_spi_read(unsigned short addr, unsigned char *data, size_t count)
 	unsigned char rxbuf[16] = {0};
 	int i = 0;
 
-printf("addr=%d,count=%d\n",addr, count);
+//printf("addr=%d,count=%d\n",addr, count);
 	mspi_cs_set(0, 0);
 
 	txbuf[0] = 0x3;
@@ -283,14 +295,11 @@ printf("addr=%d,count=%d\n",addr, count);
 	mspi_writeread8(txbuf,3,rxbuf,10);
 	memcpy(data, rxbuf, count);
 #if 0
-	printf("data\n");
-	for(i=0;i<16;i++)
-		printf(" 0x%02x",data[i]);
-#endif
 	printf("\nrxbuf\n");
 	for(i=0;i<16;i++)
 		printf(" 0x%02x",rxbuf[i]);
 	printf("\n");
+#endif
 
 	mspi_cs_set(0, 1);
 	return 0;
@@ -404,6 +413,12 @@ void mspi_cs_set(unsigned char cs, unsigned char en)
 }
 void dpll_init_pre()
 {
+	if(HT201_DS31400 != get_dpll_type())
+	{
+		printf("dpll is not ds31400, return\n");
+		return;
+	}
+
 	printf("dpll init ...");
 	mspi_config(1,1);
 	udelay(500000);
