@@ -106,14 +106,15 @@ int wait_fpga_load_done()
 	return 1;
 }
 
-#define HT201_DS31400	0x12
-#define HT201_IDT		0x13
+#define HT201_DS31400		0x11
+#define HT201_E_DS31400	0x12
+#define HT201_E_IDT		0x13
 unsigned char get_dpll_type()
 {
 	unsigned char data[2];
 
 	fpga_spi_read(0, data, 2);
-	printf("data=%x %x\n",data[0],data[1]);
+	printf("FPGA ID:%x %x\n",data[0],data[1]);
 	return data[1];	
 }
 
@@ -413,9 +414,12 @@ void mspi_cs_set(unsigned char cs, unsigned char en)
 }
 void dpll_init_pre()
 {
-	if(HT201_DS31400 != get_dpll_type())
+	unsigned char type = 0;
+
+	type = get_dpll_type();
+	if(HT201_E_IDT == type)
 	{
-		printf("dpll is not ds31400, return\n");
+		printf("dpll is idt, return\n");
 		return;
 	}
 
