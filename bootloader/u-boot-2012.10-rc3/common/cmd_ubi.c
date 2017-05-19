@@ -22,6 +22,7 @@
 #include <ubi_uboot.h>
 #include <asm/errno.h>
 #include <jffs2/load_kernel.h>
+#include "version.h"
 
 #define DEV_TYPE_NONE		0
 #define DEV_TYPE_NAND		1
@@ -431,6 +432,194 @@ static int ubi_dev_scan(struct mtd_info *info, char *ubidev,
 	return 0;
 }
 
+#if 1  /*add by zhangjj 201-6-11-24 for two kernel*/
+
+#define RAM_TMP_ADDR			0x60000000
+#define RAM_TMP_ADDR_STRING		"0x60000000"
+#define PARTITION_ITABLE_STRING		"0x04000000"
+#define TWO_PAGES_SIZE_STRING		"0x1000"
+#define BOOT_PARA_PAGE_OFFSET		0x800
+#define A_BLOCK_SIZE_STRING		"0x20000"
+
+extern int do_ubifs_load(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
+extern int do_ubifs_mount(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]); 
+extern int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[]);
+
+unsigned char nand_read_mtd(void)
+{
+	int i,ret;
+	unsigned char data_buf[2048]={0};
+	unsigned char bootflag=0,bootflag1=0,imageflag=0,imageflag1=0,activeflag=0,activeflag1=0;
+	unsigned char mtd_flag;
+	char *argv1[10]={0};
+//      rc = eeprom_read (0xa9,off,data_buf,CONFIG_PDT_ENV_SIZE);
+	argv1[0] = "nand";
+	argv1[1] = "read";
+	argv1[2] = RAM_TMP_ADDR_STRING;
+	argv1[3] = PARTITION_ITABLE_STRING;
+	argv1[4] = TWO_PAGES_SIZE_STRING;
+	argv1[5] = NULL;
+	ret = do_nand(NULL, 0, 5, argv1);
+	for(i=0;i<2048;i++)
+			data_buf[i] = *((unsigned char *)RAM_TMP_ADDR + i);
+				
+	if(0xaa==data_buf[0] && 0x55==data_buf[1] && 0xcc==data_buf[2] && 0x77==data_buf[3])
+    {    
+		bootflag = 1;
+    }   
+
+	if(0xaa==data_buf[64] && 0x55==data_buf[65] && 0xcc==data_buf[66] && 0x77==data_buf[67])
+    {
+		bootflag1 = 1;
+    }
+
+	if(0xaa==data_buf[4] && 0x55==data_buf[5] && 0xcc==data_buf[6] && 0x77==data_buf[7])
+	{
+		imageflag = 1;
+	}	
+
+	if(0xaa==data_buf[68] && 0x55==data_buf[69] && 0xcc==data_buf[70] && 0x77==data_buf[71])
+	{
+		imageflag1 = 1;
+	}        
+	if(0xcc==data_buf[8] && 0x77==data_buf[9] && 0xaa==data_buf[10] && 0x55==data_buf[11])
+	{     
+		activeflag = 1;
+	}
+	if(0xcc==data_buf[72] && 0x77==data_buf[73] && 0xaa==data_buf[74] && 0x55==data_buf[75])
+	{
+		activeflag1 = 1;
+	}
+	mtd_flag = (activeflag1<<5)|(activeflag<<4)|(imageflag1<<3)|(imageflag<<2)|(bootflag1<<1)|bootflag;
+	return mtd_flag;
+	
+}
+
+unsigned char sflash_write_version(void)
+{
+	int i,ret;
+	unsigned char data_buf[2048]={0};
+	unsigned char ver_flag=0;
+	char *argv1[10]={0};
+	char uboot_ver[23] = U_BOOT_VERSION;
+//      rc = eeprom_read (0xa9,off,data_buf,CONFIG_PDT_ENV_SIZE);
+	argv1[0] = "nand";
+	argv1[1] = "read";
+	argv1[2] = RAM_TMP_ADDR_STRING;
+	argv1[3] = PARTITION_ITABLE_STRING;
+	argv1[4] = TWO_PAGES_SIZE_STRING;
+	argv1[5] = NULL;
+	ret = do_nand(NULL, 0, 5, argv1);
+
+	for(i=0;i<8;i++)
+	{
+		if(*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x14) + i) != uboot_ver[7+i])
+			ver_flag += 1;
+	}
+	if(0xAA != *((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET)))
+	{
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x0)) = 0xAA;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x1)) = 0x55;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x2)) = 0xCC;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x3)) = 0x77;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x4)) = 0xAA;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x5)) = 0x55;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x6)) = 0xCC;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x7)) = 0x77;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x8)) = 0xCC;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x9)) = 0x77;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0xa)) = 0xAA;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0xb)) = 0x55;
+		if(ver_flag == 0)
+		{
+	argv1[0] = "nand";
+	argv1[1] = "erase";
+	argv1[2] = PARTITION_ITABLE_STRING;
+	argv1[3] = A_BLOCK_SIZE_STRING;
+	argv1[4] = NULL;
+	ret = do_nand(NULL, 0, 4, argv1);
+	argv1[0] = "nand";
+	argv1[1] = "write";
+	argv1[2] = RAM_TMP_ADDR_STRING;
+	argv1[3] = PARTITION_ITABLE_STRING;
+	argv1[4] = TWO_PAGES_SIZE_STRING;
+	argv1[5] = NULL;
+	ret = do_nand(NULL, 0, 5, argv1);
+		}
+	}
+	if(ver_flag > 0)
+	{
+		printf("Updating uboot version!!!\n");
+		for(i=0;i<8;i++)
+			*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x14) + i) = uboot_ver[7+i];
+	//	for(i=0;i<8;i++)
+	//		*((unsigned char *)0x85000010 + i) = 0xff;	
+	//		写分区大小
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x10)) = 0x00;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x11)) = 0x10;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x12)) = 0x00;
+		*((unsigned char *)(RAM_TMP_ADDR+BOOT_PARA_PAGE_OFFSET+0x13)) = 0x00;
+	argv1[0] = "nand";
+	argv1[1] = "erase";
+	argv1[2] = PARTITION_ITABLE_STRING;
+	argv1[3] = A_BLOCK_SIZE_STRING;
+	argv1[4] = NULL;
+	ret = do_nand(NULL, 0, 4, argv1);
+	argv1[0] = "nand";
+	argv1[1] = "write";
+	argv1[2] = RAM_TMP_ADDR_STRING;
+	argv1[3] = PARTITION_ITABLE_STRING;
+	argv1[4] = TWO_PAGES_SIZE_STRING;
+	argv1[5] = NULL;
+	ret = do_nand(NULL, 0, 5, argv1);
+	}
+
+	return 0;
+	
+}
+
+void active_kernel1(void)
+{
+	int i,ret;
+	unsigned char data_buf[2048]={0};
+	unsigned char ver_flag=0;
+	char *argv1[10]={0};
+
+	argv1[0] = "nand";
+	argv1[1] = "read";
+	argv1[2] = RAM_TMP_ADDR_STRING;
+	argv1[3] = PARTITION_ITABLE_STRING;
+	argv1[4] = TWO_PAGES_SIZE_STRING;
+	argv1[5] = NULL;
+	ret = do_nand(NULL, 0, 5, argv1);
+
+	if(0xCC != *((unsigned char *)(RAM_TMP_ADDR+0x8)))
+	{
+		argv1[0] = "nand";
+		argv1[1] = "erase";
+		argv1[2] = PARTITION_ITABLE_STRING;
+		argv1[3] = A_BLOCK_SIZE_STRING;
+		argv1[4] = NULL;
+		ret = do_nand(NULL, 0, 4, argv1);
+		*(unsigned char *)(RAM_TMP_ADDR+0x8) = 0xCC;
+		*(unsigned char *)(RAM_TMP_ADDR+0x9) = 0x77;
+		*(unsigned char *)(RAM_TMP_ADDR+0xa) = 0xAA;
+		*(unsigned char *)(RAM_TMP_ADDR+0xb) = 0x55;
+		argv1[0] = "nand";
+		argv1[1] = "write";
+		argv1[2] = RAM_TMP_ADDR_STRING;
+		argv1[3] = PARTITION_ITABLE_STRING;
+		argv1[4] = TWO_PAGES_SIZE_STRING;
+		argv1[5] = NULL;
+		ret = do_nand(NULL, 0, 5, argv1);
+
+	}
+	
+}
+
+#endif
+
+
 static int do_ubi(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	size_t size = 0;
@@ -445,6 +634,222 @@ static int do_ubi(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 		return 1;
 	}
 
+#if 1
+	int ret;
+	char *argv1[10]={0};
+/*************add by yu20160722 start****************/	
+	if (strcmp(argv[1], "bootk") == 0) {
+		/*写入uboot的版本号及uboot分区大小*/
+		ret = sflash_write_version();
+		printf("after sflash_write_version\n");
+		/*读取数据结构中的内容，判断启动哪一个内核*/
+		ret = nand_read_mtd();
+		printf("after nand_read_mtd,ret = 0x%x\n",ret);
+		if(((ret & 0x15)==0x15)||((ret & 0x25)==0x5)){
+			printf("\n");
+			printf("Starting image1......\n");
+			printf("\n");
+			int  argc1 = 3;
+			/*kernel1*/
+			active_kernel1();					/*active kernel1 default*/
+//			if (strcmp(argv[1], "part") == 0) {
+/*****************************ubi part kernel1 start****************************/
+			argv1[0] = "ubi";
+			argv1[1] = "part";
+			argv1[2] = "kernel1";
+			argv1[3] = NULL;	
+			char mtd_dev[16];
+			struct mtd_device *dev;
+			struct part_info *part;
+			const char *vid_header_offset = NULL;
+			u8 pnum;
+
+			/* Print current partition */
+			if (argc1 == 2) {
+				if (!ubi_dev.selected) {
+					printf("Error, no UBI device/partition selected!\n");
+					return 1;
+				}
+
+				printf("Device %d: %s, partition %s\n",
+					   ubi_dev.nr, ubi_dev.mtd_info->name, ubi_dev.part_name);
+				return 0;
+			}
+
+			if (argc1 < 3) {
+				cmd_usage(cmdtp);
+				return 1;
+			}
+
+			/* todo: get dev number for NAND... */
+			ubi_dev.nr = 0;
+
+			/*
+			 * Call ubi_exit() before re-initializing the UBI subsystem
+			 */
+			if (ubi_initialized) {
+				ubi_exit();
+				del_mtd_partitions(ubi_dev.mtd_info);
+			}
+
+			/*
+			 * Search the mtd device number where this partition
+			 * is located
+			 */
+			if (find_dev_and_part(argv1[2], &dev, &pnum, &part)) {
+				printf("Partition %s not found!\n", argv1[2]);
+				return 1;
+			}
+			sprintf(mtd_dev, "%s%d", MTD_DEV_TYPE(dev->id->type), dev->id->num);
+			ubi_dev.mtd_info = get_mtd_device_nm(mtd_dev);
+			if (IS_ERR(ubi_dev.mtd_info)) {
+				printf("Partition %s not found on device %s!\n", argv1[2], mtd_dev);
+				return 1;
+			}
+
+			ubi_dev.selected = 1;
+
+			if (argc > 3)
+				vid_header_offset = argv1[3];
+			strcpy(ubi_dev.part_name, argv1[2]);
+			err = ubi_dev_scan(ubi_dev.mtd_info, ubi_dev.part_name,
+					vid_header_offset);
+			if (err) {
+				printf("UBI init error %d\n", err);
+				ubi_dev.selected = 0;
+				return err;
+			}
+
+			ubi = ubi_devices[0];
+/*****************************ubi part kernel1 end****************************/	
+/*****************************ubifsmount kernel1 start************************/	
+
+			argv1[0] = "ubifsmount";
+			argv1[1] = "kernel1";
+			argv1[2] = NULL;
+			ret = do_ubifs_mount(NULL, 0, 2, argv1);
+
+/*****************************ubifsload kernel1 start*************************/	
+			argv1[0] = "ubifsload";
+			argv1[1] = "0x61007fc0";
+			argv1[2] = "uImage";
+			argv1[3] = NULL;
+			ret = do_ubifs_load(NULL, 0, 3, argv1);
+
+/*****************************ubifsload kernel1 start*************************/	
+			argv1[0] = "ubifsload";
+			argv1[1] = "0x62000000";
+			argv1[2] = "rootfs";
+			argv1[3] = NULL;
+			ret = do_ubifs_load(NULL, 0, 3, argv1);
+
+			return 0;
+		}
+		else if((ret & 0x2a)==0x2a){
+			printf("\n");
+			printf("Starting image2......\n");
+			printf("\n");
+			/*kernel2*/
+			int  argc1 = 3;
+			/*kernel1*/
+//			if (strcmp(argv[1], "part") == 0) {
+/*****************************ubi part kernel1 start****************************/
+			argv1[0] = "ubi";
+			argv1[1] = "part";
+			argv1[2] = "kernel2";
+			argv1[3] = NULL;	
+			char mtd_dev[16];
+			struct mtd_device *dev;
+			struct part_info *part;
+			const char *vid_header_offset = NULL;
+			u8 pnum;
+
+			/* Print current partition */
+			if (argc1 == 2) {
+				if (!ubi_dev.selected) {
+					printf("Error, no UBI device/partition selected!\n");
+					return 1;
+				}
+
+				printf("Device %d: %s, partition %s\n",
+					   ubi_dev.nr, ubi_dev.mtd_info->name, ubi_dev.part_name);
+				return 0;
+			}
+
+			if (argc1 < 3) {
+				cmd_usage(cmdtp);
+				return 1;
+			}
+
+			/* todo: get dev number for NAND... */
+			ubi_dev.nr = 0;
+
+			/*
+			 * Call ubi_exit() before re-initializing the UBI subsystem
+			 */
+			if (ubi_initialized) {
+				ubi_exit();
+				del_mtd_partitions(ubi_dev.mtd_info);
+			}
+
+			/*
+			 * Search the mtd device number where this partition
+			 * is located
+			 */
+			if (find_dev_and_part(argv1[2], &dev, &pnum, &part)) {
+				printf("Partition %s not found!\n", argv1[2]);
+				return 1;
+			}
+			sprintf(mtd_dev, "%s%d", MTD_DEV_TYPE(dev->id->type), dev->id->num);
+			ubi_dev.mtd_info = get_mtd_device_nm(mtd_dev);
+			if (IS_ERR(ubi_dev.mtd_info)) {
+				printf("Partition %s not found on device %s!\n", argv1[2], mtd_dev);
+				return 1;
+			}
+
+			ubi_dev.selected = 1;
+
+			if (argc > 3)
+				vid_header_offset = argv1[3];
+			strcpy(ubi_dev.part_name, argv1[2]);
+			err = ubi_dev_scan(ubi_dev.mtd_info, ubi_dev.part_name,
+					vid_header_offset);
+			if (err) {
+				printf("UBI init error %d\n", err);
+				ubi_dev.selected = 0;
+				return err;
+			}
+
+			ubi = ubi_devices[0];
+/*****************************ubi part kernel1 end****************************/	
+/*****************************ubifsmount kernel1 start************************/	
+			argv1[0] = "ubifsmount";
+			argv1[1] = "kernel2";
+			argv1[2] = NULL;
+			ret = do_ubifs_mount(NULL, 0, 2, argv1);
+/*****************************ubifsmount kernel1 end**************************/
+/*****************************ubifsload kernel1 start*************************/	
+			argv1[0] = "ubifsload";
+			argv1[1] = "0x61007fc0";
+			argv1[2] = "uImage";
+			argv1[3] = NULL;
+			ret = do_ubifs_load(NULL, 0, 3, argv1);
+
+/*****************************ubifsload kernel1 start*************************/	
+			argv1[0] = "ubifsload";
+			argv1[1] = "0x62000000";
+			argv1[2] = "rootfs";
+			argv1[3] = NULL;
+			ret = do_ubifs_load(NULL, 0, 3, argv1);
+
+			return 0;
+		}
+		else
+			printf("image1 and image2 are invalid\n");
+		return 0;
+	}
+/*************add by yu20160722 end******************/
+#endif
 	if (strcmp(argv[1], "part") == 0) {
 		char mtd_dev[16];
 		struct mtd_device *dev;
@@ -579,6 +984,71 @@ static int do_ubi(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 		addr = simple_strtoul(argv[2], NULL, 16);
 		size = simple_strtoul(argv[4], NULL, 16);
 
+#if 1
+		if(strcmp(argv[3],"kernel1")==0){
+			argv1[0] = "nand";
+			argv1[1] = "read";
+			argv1[2] = RAM_TMP_ADDR_STRING;
+			argv1[3] = PARTITION_ITABLE_STRING;
+			argv1[4] = TWO_PAGES_SIZE_STRING;
+			argv1[5] = NULL;
+			ret = do_nand(NULL, 0, 5, argv1);
+			argv1[0] = "nand";
+			argv1[1] = "erase";
+			argv1[2] = PARTITION_ITABLE_STRING;
+			argv1[3] = A_BLOCK_SIZE_STRING;
+			argv1[4] = NULL;
+			ret = do_nand(NULL, 0, 4, argv1);
+			
+			*(unsigned char *)(RAM_TMP_ADDR+0x4) = 0xAA;
+			*(unsigned char *)(RAM_TMP_ADDR+0x5) = 0x55;
+			*(unsigned char *)(RAM_TMP_ADDR+0x6) = 0xCC;
+			*(unsigned char *)(RAM_TMP_ADDR+0x7) = 0x77;
+			*(unsigned char *)(RAM_TMP_ADDR+0xc) = 0x02;
+			*(unsigned char *)(RAM_TMP_ADDR+0xd) = 0x00;
+			*(unsigned char *)(RAM_TMP_ADDR+0xe) = 0x00;
+			*(unsigned char *)(RAM_TMP_ADDR+0xf) = 0x00;
+            argv1[0] = "nand";
+            argv1[1] = "write";
+            argv1[2] = RAM_TMP_ADDR_STRING;
+            argv1[3] = PARTITION_ITABLE_STRING;
+            argv1[4] = TWO_PAGES_SIZE_STRING;
+            argv1[5] = NULL;
+            ret = do_nand(NULL, 0, 5, argv1);
+		}
+		else if(strcmp(argv[3],"kernel2")==0){
+			argv1[0] = "nand";
+			argv1[1] = "read";
+			argv1[2] = RAM_TMP_ADDR_STRING;
+			argv1[3] = PARTITION_ITABLE_STRING;
+			argv1[4] = TWO_PAGES_SIZE_STRING;
+			argv1[5] = NULL;
+			ret = do_nand(NULL, 0, 5, argv1);
+			argv1[0] = "nand";
+			argv1[1] = "erase";
+			argv1[2] = PARTITION_ITABLE_STRING;
+			argv1[3] = A_BLOCK_SIZE_STRING;
+			argv1[4] = NULL;
+			ret = do_nand(NULL, 0, 4, argv1);
+			
+			*(unsigned char *)(RAM_TMP_ADDR+0x44) = 0xAA;
+			*(unsigned char *)(RAM_TMP_ADDR+0x45) = 0x55;
+			*(unsigned char *)(RAM_TMP_ADDR+0x46) = 0xCC;
+			*(unsigned char *)(RAM_TMP_ADDR+0x47) = 0x77;
+			*(unsigned char *)(RAM_TMP_ADDR+0x4c) = 0x02;
+			*(unsigned char *)(RAM_TMP_ADDR+0x4d) = 0x00;
+			*(unsigned char *)(RAM_TMP_ADDR+0x4e) = 0x00;
+			*(unsigned char *)(RAM_TMP_ADDR+0x4f) = 0x00;			
+            argv1[0] = "nand";
+            argv1[1] = "write";
+            argv1[2] = RAM_TMP_ADDR_STRING;
+            argv1[3] = PARTITION_ITABLE_STRING;
+            argv1[4] = TWO_PAGES_SIZE_STRING;
+            argv1[5] = NULL;
+            ret = do_nand(NULL, 0, 5, argv1);			
+		}
+#endif
+
 		return ubi_volume_write(argv[3], (void *)addr, size);
 	}
 
@@ -621,6 +1091,10 @@ U_BOOT_CMD(
 		" - Read volume to address with size\n"
 	"ubi remove[vol] volume"
 		" - Remove volume\n"
+#if 1 //add by zhangjj 2016-11-24
+	"ubi bootk"
+		" - select a kernel to boot\n"
+#endif 
 	"[Legends]\n"
 	" volume: character name\n"
 	" size: specified in bytes\n"

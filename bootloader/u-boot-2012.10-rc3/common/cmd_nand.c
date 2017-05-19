@@ -990,7 +990,227 @@ usage:
 	return nand_load_image(cmdtp, &nand_info[idx], offset, addr, argv[0]);
 }
 
+#if 1 /*add by zhangjj 2016-11-24 for two kernel*/
+
+#define RAM_TMP_ADDR			0x60000000
+#define RAM_TMP_ADDR_STRING		"0x60000000"
+#define PARTITION_ITABLE_STRING		"0x04000000"
+#define TWO_PAGES_SIZE_STRING		"0x1000"
+//#define BOOT_PARA_PAGE_OFFSET		0x800
+#define A_BLOCK_SIZE_STRING		"0x20000"
+
+
+int do_Printfimage (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	int i,ret;
+	unsigned char data_buf[2048]={0};
+	char *argv1[10]={0};
+
+	argv1[0] = "nand";
+	argv1[1] = "read";
+	argv1[2] = RAM_TMP_ADDR_STRING;
+	argv1[3] = PARTITION_ITABLE_STRING;
+	argv1[4] = TWO_PAGES_SIZE_STRING;
+	argv1[5] = NULL;
+	ret = do_nand(NULL, 0, 5, argv1);
+	for(i=0;i<2048;i++)
+		data_buf[i] = *((unsigned char *)RAM_TMP_ADDR + i);
+
+	if(0xaa==data_buf[4] && 0x55==data_buf[5] && 0xcc==data_buf[6] && 0x77==data_buf[7])
+	{     
+		printf("image1: valid   ");
+		if(0xcc==data_buf[8] && 0x77==data_buf[9] && 0xaa==data_buf[10] && 0x55==data_buf[11])
+		{     
+			printf("active\n");
+		}
+		else
+			printf("inactive\n");				
+	}    
+	else
+		printf("image1: invalid inactive\n");
+	if(0xaa==data_buf[68] && 0x55==data_buf[69] && 0xcc==data_buf[70] && 0x77==data_buf[71])
+	{
+		printf("image2: valid   ");
+		if(0xcc==data_buf[72] && 0x77==data_buf[73] && 0xaa==data_buf[74] && 0x55==data_buf[75])
+			printf("active\n");
+		else 
+			printf("inactive\n");			
+	}
+	else 
+		printf("iamge2: invalid inactive\n");
+
+
+
+	return 0;
+}
+
+int do_Activeimage (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	int rc,ret,i;
+	char *argv1[10]={0};
+	unsigned char data_buf[2048]={0},bootflag=0,bootflag1=0,imageflag=0,imageflag1=0,activeflag=0,activeflag1=0;
+	if(2==argc){
+		argv1[0] = "nand";
+		argv1[1] = "read";
+		argv1[2] = RAM_TMP_ADDR_STRING;
+		argv1[3] = PARTITION_ITABLE_STRING;
+		argv1[4] = TWO_PAGES_SIZE_STRING;
+		argv1[5] = NULL;
+		ret = do_nand(NULL, 0, 5, argv1);
+
+		for(i=0;i<2048;i++)
+			data_buf[i] = *((unsigned char *)(RAM_TMP_ADDR + i));
+		if(0xaa==data_buf[0] && 0x55==data_buf[1] && 0xcc==data_buf[2] && 0x77==data_buf[3])
+		{    
+			//  printf("boot0 is valid\n");
+			bootflag = 1;
+		}
+		else{  
+			;	//printf("boot0 is invalid\n");    
+		}
+		if(0xaa==data_buf[64] && 0x55==data_buf[65] && 0xcc==data_buf[66] && 0x77==data_buf[67])
+		{
+			// printf("boot1 is valid\n");
+			bootflag1 = 1;
+		}
+		else
+		{ 
+			;//printf("boot1 is invalid\n");
+		}
+		if(0xaa==data_buf[4] && 0x55==data_buf[5] && 0xcc==data_buf[6] && 0x77==data_buf[7])
+		{     
+			// printf("image0 is valid\n");
+			imageflag = 1;
+		}    
+		else
+		{
+			;//printf("image0 is invalid\n");
+		}
+		if(0xaa==data_buf[68] && 0x55==data_buf[69] && 0xcc==data_buf[70] && 0x77==data_buf[71])
+		{
+			// printf("image1 is valid\n");
+			imageflag1 = 1;
+		}        
+		else 
+		{
+			;//printf("iamge1 is invalid\n");
+		}
+		if(0xcc==data_buf[8] && 0x77==data_buf[9] && 0xaa==data_buf[10] && 0x55==data_buf[11])
+		{     
+			//printf("boot0 is active\n");
+			activeflag = 1;
+		}
+		else
+		{
+			;//printf("boot0 is inactive\n");
+		}
+		if(0xcc==data_buf[72] && 0x77==data_buf[73] && 0xaa==data_buf[74] && 0x55==data_buf[75])
+		{
+			// printf("boot1 is active\n");
+			activeflag1 = 1;
+		}	
+		else 
+		{
+			;//printf("boot1 is inactive\n");
+		}
+		//printf("argv[0]=%s\n",argv[0]);     
+		//if(0x31==argv[0])
+		if(strcmp(argv[1],"1")==0)
+		{
+			if((1==imageflag))
+			{
+				argv1[0] = "nand";
+				argv1[1] = "erase";
+				argv1[2] = PARTITION_ITABLE_STRING;
+				argv1[3] = A_BLOCK_SIZE_STRING;
+				argv1[4] = NULL;
+				ret = do_nand(NULL, 0, 4, argv1);
+				*(unsigned char *)(RAM_TMP_ADDR +0x8) = 0xCC;
+				*(unsigned char *)(RAM_TMP_ADDR +0x9) = 0x77;
+				*(unsigned char *)(RAM_TMP_ADDR +0xa) = 0xAA;
+				*(unsigned char *)(RAM_TMP_ADDR +0xb) = 0x55;
+				*(unsigned char *)(RAM_TMP_ADDR +0x48) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0x49) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0x4a) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0x4b) = 0x00;
+				argv1[0] = "nand";
+				argv1[1] = "write";
+				argv1[2] = RAM_TMP_ADDR_STRING;
+				argv1[3] = PARTITION_ITABLE_STRING;
+				argv1[4] = TWO_PAGES_SIZE_STRING;
+				argv1[5] = NULL;
+				ret = do_nand(NULL, 0, 5, argv1);
+				//                        rc = eeprom_write(0xa9,off+8,data_buf,4);
+				printf("image1 actived!\n");
+			}
+			else{
+				printf("image1 invalid!\n");
+			}    	
+		}
+		//else if(0x32==argv[0])
+		else if(strcmp(argv[1],"2")==0)
+		{
+			if((1==imageflag1))
+			{
+				argv1[0] = "nand";
+				argv1[1] = "erase";
+				argv1[2] = PARTITION_ITABLE_STRING;
+				argv1[3] = A_BLOCK_SIZE_STRING;
+				argv1[4] = NULL;
+				ret = do_nand(NULL, 0, 4, argv1);
+				*(unsigned char *)(RAM_TMP_ADDR +0x8) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0x9) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0xa) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0xb) = 0x00;
+				*(unsigned char *)(RAM_TMP_ADDR +0x48) = 0xCC;
+				*(unsigned char *)(RAM_TMP_ADDR +0x49) = 0x77;
+				*(unsigned char *)(RAM_TMP_ADDR +0x4a) = 0xAA;
+				*(unsigned char *)(RAM_TMP_ADDR +0x4b) = 0x55;
+				argv1[0] = "nand";
+				argv1[1] = "write";
+				argv1[2] = RAM_TMP_ADDR_STRING;
+				argv1[3] = PARTITION_ITABLE_STRING;
+				argv1[4] = TWO_PAGES_SIZE_STRING;
+				argv1[5] = NULL;
+				ret = do_nand(NULL, 0, 5, argv1);
+
+				printf("image2 actived!\n");
+			}
+			else
+				printf("image2 invalid!\n");
+		}
+		else
+			printf("parameter error!\n");
+	}
+
+	else{
+		cmd_usage(cmdtp);
+		return 1;
+	}	
+	return 0;
+}
+#endif
+
+
 U_BOOT_CMD(nboot, 4, 1, do_nandboot,
 	"boot from NAND device",
 	"[partition] | [[[loadAddr] dev] offset]"
 );
+
+
+#if 1
+U_BOOT_CMD(
+        printimage, 2, 0,      do_Printfimage,
+        "Printfimage- print two images states",
+        "\n    - display the two images's state\n"
+
+);
+U_BOOT_CMD(
+        activeimage, 2, 0,      do_Activeimage,
+        "Activeimage- Active one of the two images",
+        "\n    - 1 means active image1,2 means active image2\n"
+);
+#endif
+
+
+

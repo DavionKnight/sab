@@ -1922,6 +1922,16 @@ int do_chpart(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
  * @param argv arguments list
  * @return 0 on success, 1 otherwise
  */
+
+#if 1
+#define RAM_TMP_ADDR			0x60000000
+#define RAM_TMP_ADDR_STRING		"0x60000000"
+#define PARTITION_ITABLE_STRING		"0x04000000"
+#define TWO_PAGES_SIZE_STRING		"0x1000"
+//#define BOOT_PARA_PAGE_OFFSET		0x800
+#define A_BLOCK_SIZE_STRING		"0x20000"
+#endif
+
 int do_mtdparts(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	if (argc == 2) {
@@ -1931,6 +1941,40 @@ int do_mtdparts(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			setenv("partition", NULL);
 
 			mtdparts_init();
+#if 1
+			int ret;
+			char *argv1[10];
+//      rc = eeprom_read (0xa9,off,data_buf,CONFIG_PDT_ENV_SIZE);
+			argv1[0] = "nand";
+			argv1[1] = "read";
+			argv1[2] = RAM_TMP_ADDR_STRING;
+			argv1[3] = PARTITION_ITABLE_STRING;
+			argv1[4] = TWO_PAGES_SIZE_STRING;
+			argv1[5] = NULL;
+			ret = do_nand(NULL, 0, 5, argv1);
+     		       
+			argv1[0] = "nand";
+		        argv1[1] = "erase";
+                        argv1[2] = PARTITION_ITABLE_STRING;
+                        argv1[3] = A_BLOCK_SIZE_STRING;
+                        argv1[4] = NULL;
+                        ret = do_nand(NULL, 0, 4, argv1);
+			*(unsigned char *)(RAM_TMP_ADDR+0x0) = 0xAA;
+			*(unsigned char *)(RAM_TMP_ADDR+0x1)= 0x55;
+			*(unsigned char *)(RAM_TMP_ADDR+0x2)= 0xCC;
+			*(unsigned char *)(RAM_TMP_ADDR+0x3)= 0x77;
+			*(unsigned char *)(RAM_TMP_ADDR+0x40)= 0xAA;
+			*(unsigned char *)(RAM_TMP_ADDR+0x41)= 0x55;
+			*(unsigned char *)(RAM_TMP_ADDR+0x42)= 0xCC;
+			*(unsigned char *)(RAM_TMP_ADDR+0x43)= 0x77;
+			argv1[0] = "nand";
+                        argv1[1] = "write";
+                        argv1[2] = RAM_TMP_ADDR_STRING;
+                        argv1[3] = PARTITION_ITABLE_STRING;
+                        argv1[4] = TWO_PAGES_SIZE_STRING;
+                        argv1[5] = NULL;
+                        ret = do_nand(NULL, 0, 5, argv1);
+#endif
 			return 0;
 		} else if (strcmp(argv[1], "delall") == 0) {
 			/* this may be the first run, initialize lists if needed */
