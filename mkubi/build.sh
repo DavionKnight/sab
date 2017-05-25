@@ -13,4 +13,5 @@ mkimage -A arm -O linux -T kernel -n Image -a 0x61008000 -C none -d ./Image ./bi
 
 mkfs.ubifs -r ./bin -m 2048 -e 126976  -c  6979 -o saber2-ubi.fs 
 
-cp saber2-ubi.fs /home/work/share/saber2-ubi.fs
+cp saber2-ubi.fs /tftpboot/saber2-ubi.fs
+

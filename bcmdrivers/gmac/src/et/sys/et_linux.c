@@ -87,6 +87,30 @@
 #include <trxhdr.h>
 #include "plat/shm.h"
 
+#define OUTBAND_SUPPORT
+#ifdef OUTBAND_SUPPORT
+enum {
+    HslGoodPktsRcv = 1, 
+    HslGoodOctetsRcv = 2, 
+    HslInDiscards = 3,
+    HslUcPktsRcv = 4,
+    HslMcPktsRcv = 5,
+    HslBcPktsRcv = 6,
+    HslBadCrc = 7,
+    HslUndersize = 8,
+    HslOversize = 9,
+    HslGoodPktsSent = 10,
+    HslGoodOctetsSent = 11, 
+    HslUcPktsSent = 12,
+    HslMcPktsSent = 13,
+    HslBcPktsSent = 14,
+    HslErrSent = 15,
+    HslOutDiscards = 16,
+    Hslprotocoldroppkt = 17,
+    HslStatTypeCountMax
+ };
+#endif
+
 #ifdef CONFIG_BCM_IPROC_GMAC_PREFETCH
 #include <linux/prefetch.h>
 
@@ -1212,6 +1236,11 @@ et_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 	bool get = 0, set;
 	et_var_t *var = NULL;
 	void *buffer = NULL;
+#ifdef OUTBAND_SUPPORT
+	etc_info_t *etc;
+	int flag = 0;
+	int val[3];
+#endif
 
 	et = ET_INFO(dev);
 
@@ -1234,6 +1263,123 @@ et_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 		size = IOCBUFSZ;
 		get = TRUE; set = FALSE;
 		break;
+#ifdef OUTBAND_SUPPORT
+    case SIOCGMIIPHY:  /* tianzhy  2016-10-21*/
+        size = 6;
+        get = TRUE; 
+        set = FALSE;		
+	cmd=SIOCGETCPHYRD;
+        break;		
+    case SIOCWANDEV: /* tianzhy 2016-10-25*/
+	if (copy_from_user(&ethtoolcmd, ifr->ifr_data, sizeof(uint32)))
+	     return -EFAULT;
+
+	if(ethtoolcmd & 0xf0000) /* get port state */
+	{
+		val[0] = et->etc->linkstate;
+		size = 4;
+		flag = 1;
+
+		break;	
+	}
+
+	else if(ethtoolcmd & 0x0f00) /* clear statics counter */
+	{
+
+		et->etc->rxframe = 0;
+		et->etc->rxbyte = 0;
+		et->etc->txframe = 0;
+		et->etc->txbyte = 0;
+		et->etc->txerror = 0;
+		et->etc->rxerror  = 0;
+		et->etc->rxoflo = 0;
+		et->etc->txuflo = 0;
+		et->etc->rxbadlen = 0;
+
+		return 1;
+
+	}
+	else if(ethtoolcmd & 0xf000) /* get statics counter */
+	{
+			switch(ethtoolcmd & 0xff)
+			{		
+				case HslGoodPktsRcv:
+					val[0] = et->etc->rxframe;
+					size = 8;
+					flag = 1;
+
+					break;		
+
+				case HslGoodOctetsRcv:
+					val[0] = et->etc->rxbyte;
+					size = 8;
+					flag = 1;
+
+					break;	
+
+				case HslGoodPktsSent:
+					val[0] = et->etc->txframe;
+					size = 8;
+					flag = 1;
+
+					break;	
+
+				case HslGoodOctetsSent:
+					val[0] = et->etc->txbyte;
+					size = 8;
+					flag = 1;
+
+					break;		
+
+				case HslErrSent:
+					val[0] = et->etc->txerror;
+					size = 8;
+					flag = 1;
+
+					break;		
+
+				case HslBadCrc:
+					val[0] = et->etc->rxerror;
+					size = 8;
+					flag = 1;
+
+					break;	
+
+		}
+	}
+	else if(ethtoolcmd & 0x80) /* get eth0 speed, auto, or duplex */
+	{
+
+		val[0] = et->etc->forcespeed;
+		if(val[0] == -1) 
+			val[0] = 0x7f; /* auto */
+		val[1] = et->etc->speed;/* current speed: 10, 100 */
+		val[2] = et->etc->duplex; /* current duplex: 0=half, 1=full */
+		size = 12;
+		flag = 1;
+		break;
+		#if 0
+		/* forcespeed values */
+		#define ET_AUTO     -1
+		#define ET_10HALF   0
+		#define ET_10FULL   1
+		#define ET_100HALF  2
+		#define ET_100FULL  3	
+		#define ET_1000HALF 4
+		#define ET_1000FULL 5
+		#endif
+
+	}
+	else { /* set eth0 speed, auto, or duplex */
+		if( (ethtoolcmd & 0xff)== 0x7f)
+			*(int*)ifr->ifr_data = -1;
+		 size = sizeof(int) * 2;
+	        get = FALSE; 
+	        set = TRUE;		
+		cmd=SIOCSETCSPEED;
+	}
+        break;	
+#endif
 	case SIOCGETCPHYRD:
 	case SIOCGETCPHYRD2:
 	case SIOCGETCROBORD:
@@ -1257,6 +1403,13 @@ et_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 		break;
 	}
 
+#ifdef OUTBAND_SUPPORT
+    if(flag) /* get statics counter, return direct. tianzhy 2016-10-26*/
+    {
+	error = copy_to_user(ifr->ifr_data, (char*)val, size);
+	return error;
+    }
+#endif	
 	if ((buf = MALLOC(et->osh, size)) == NULL) {
 		ET_ERROR(("et: et_ioctl: out of memory, malloced %d bytes\n", MALLOCED(et->osh)));
 		return (-ENOMEM);
