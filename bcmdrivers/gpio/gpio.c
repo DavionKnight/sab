@@ -29,6 +29,19 @@
 
 #include "gpio.h"
 
+#define NETLINK_POWEROFF
+
+#ifdef NETLINK_POWEROFF
+
+#include <linux/netlink.h>
+#include <net/sock.h>
+#include <linux/time.h>
+static struct sock *netlink_sock;
+#ifndef GROUP_MASK 
+#define GROUP_MASK 3
+#endif
+
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 37)
 #define irq_get_chip_data get_irq_chip_data
@@ -331,6 +344,54 @@ struct iproc_gpio_irqcfg cca_gpio_irqcfg = {
 };
 #endif /* IPROC_GPIO_CCA */
 
+#ifdef NETLINK_POWEROFF
+static void recv_sock_handler(struct sk_buff * sk)
+{
+  printk("start to recv_handler()....\n");
+}
+
+int poweroff_handle(unsigned char val)
+{
+        struct sk_buff * skb0 = NULL;
+        struct nlmsghdr * nlhdr = NULL;
+
+		if(0 == val)
+		{
+			printk("poweroff_handle val=%d\n",val);
+			return -1;
+		}
+        skb0 = alloc_skb(64, GFP_KERNEL);
+        if(skb0)
+        {
+                nlhdr = nlmsg_put(skb0, 0, 0, 0, 64-sizeof(*nlhdr), 0);
+
+                memcpy(NLMSG_DATA(nlhdr), (unsigned char*)&val, 1);
+
+                nlhdr->nlmsg_len = NLMSG_LENGTH(1);
+                nlhdr->nlmsg_pid = 0;
+                nlhdr->nlmsg_flags= 0;
+
+                NETLINK_CB(skb0).pid = 0;
+                NETLINK_CB(skb0).dst_group = GROUP_MASK;
+
+
+                netlink_broadcast(netlink_sock, skb0, 0, GROUP_MASK, GFP_KERNEL);
+
+        }
+        else
+        {
+                printk("Error to malloc nlhdr...\n");
+                return 0;
+        }
+        return 1;
+
+        nlmsg_failure:
+        if(skb0 != 0)
+                        kfree_skb(skb0);
+        return 0;
+}
+
+#endif
 #if defined(IPROC_GPIO_CCB) || defined(IPROC_GPIO_CCG)
 static irqreturn_t 
 iproc_gpio_irq_handler_ccb(int irq, void *dev)
@@ -338,13 +399,16 @@ iproc_gpio_irq_handler_ccb(int irq, void *dev)
     struct iproc_gpio_chip *ourchip = dev;
     int iter, max_pin;
     unsigned int  val;
+	struct timeval now;
 
-printk("come in iproc_gpio_irq_handler_ccb\n");
+//	do_gettimeofday(&now);
+//	printk("gpio interrupt time sec:%d usec:%d\n",now.tv_sec,now.tv_usec);
+
     val = _iproc_gpio_readl(ourchip, IPROC_GPIO_CCB_INT_MSTAT);
     if(!val){
         return IRQ_NONE;
     }
-printk("come in iproc_gpio_irq_handler_ccbv val = 0x%x\n",val);
+	poweroff_handle(1);
 
 	max_pin = ourchip->pin_offset + ourchip->chip.ngpio;
     for (iter = ourchip->pin_offset; iter < max_pin; iter ++) {
@@ -1034,8 +1098,24 @@ void __init  iproc_gpiolib_add(struct iproc_gpio_chip *chip)
 
 }
 
+#ifdef NETLINK_POWEROFF
+void netlink_poweroff_init()
+{
+		struct netlink_kernel_cfg cfg = {
+				.input	= recv_sock_handler,
+		};
+
+		netlink_sock = netlink_kernel_create(&init_net, NETLINK_POWEROFF, THIS_MODULE, &cfg);
+		if (!netlink_sock) {
+				printk("Fail to create netlink_sock socket.....\n");
+		}
+}
+#endif
 static int __init gpio_init(void)
 {      
+#ifdef NETLINK_POWEROFF
+	netlink_poweroff_init();
+#endif
     iproc_gpiolib_init();
     
     return 0;
