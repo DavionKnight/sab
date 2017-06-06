@@ -27,7 +27,9 @@
 #VERSION =  v001r004 #003 kernel eth0 mac error, fac info 1st_MAC should save to env nand
 #VERSION =  v001r005 #004 phy reset signal to fpga error
 #VERSION =  v001r006 #1.run dnu modify 2.HT201E differentiate by fpga id
-VERSION =  v001r007 #1.dual kernels support
+#VERSION =  v001r007 #1.dual kernels support
+VERSION =  v001r008 #1. modify default hardware version
+
 PATCHLEVEL =   
 SUBLEVEL =
 EXTRAVERSION = HT201

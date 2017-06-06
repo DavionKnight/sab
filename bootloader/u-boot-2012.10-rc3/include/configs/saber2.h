@@ -392,10 +392,10 @@
 	"Vendor=HuaHuan\0"	\
 	"Serial#=99999\0" \
 	"Device=HT201\0" \
-	"Hardware_Version=1.0.0.0\0" \
+	"Hardware_Version=A.01\0" \
 	"1st_MAC=64:1E:81:01:02:03\0" \
-	"Date_of_Production=09.01.2014\0" \
-	"HwCfg=0xfe000100\0" 
+	"Date_of_Production=06.01.2016\0" \
+	"HwCfg=0xfe040400\0" 
 
 #endif /* !CONFIG_IPROC_MIN_FEATURES */
 
