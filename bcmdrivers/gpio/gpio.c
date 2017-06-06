@@ -29,9 +29,9 @@
 
 #include "gpio.h"
 
-#define NETLINK_POWEROFF
+#define POWERDOWN_ALARM
 
-#ifdef NETLINK_POWEROFF
+#ifdef POWERDOWN_ALARM
 
 #include <linux/netlink.h>
 #include <net/sock.h>
@@ -344,7 +344,7 @@ struct iproc_gpio_irqcfg cca_gpio_irqcfg = {
 };
 #endif /* IPROC_GPIO_CCA */
 
-#ifdef NETLINK_POWEROFF
+#ifdef POWERDOWN_ALARM
 static void recv_sock_handler(struct sk_buff * sk)
 {
   printk("start to recv_handler()....\n");
@@ -1098,7 +1098,7 @@ void __init  iproc_gpiolib_add(struct iproc_gpio_chip *chip)
 
 }
 
-#ifdef NETLINK_POWEROFF
+#ifdef POWERDOWN_ALARM
 void netlink_poweroff_init()
 {
 		struct netlink_kernel_cfg cfg = {
@@ -1113,7 +1113,7 @@ void netlink_poweroff_init()
 #endif
 static int __init gpio_init(void)
 {      
-#ifdef NETLINK_POWEROFF
+#ifdef POWERDOWN_ALARM
 	netlink_poweroff_init();
 #endif
     iproc_gpiolib_init();
