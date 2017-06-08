@@ -1618,7 +1618,8 @@ et_set_multicast_list(struct net_device *dev)
 		etc->nmulticast = i;
 
 		/* LR: partial re-init, DMA is already initialized */
-		et_init(et, ET_INIT_INTRON);
+/*1/0/1 down when get state delete by zhangjiajie 2017-6-9*/
+//		et_init(et, ET_INIT_INTRON); 
 	}
 
 	if (locked) {
