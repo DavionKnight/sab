@@ -198,6 +198,11 @@ int fac_saveenv(void)
 
 int fac_env_check(void)
 {
+	if(NULL == fac_env_ptr)
+	{
+		printf("fac_env_ptr malloc\n");
+		fac_env_ptr = (fac_env_t *)malloc(sizeof(fac_env_t));
+	}
 	if (gd->fac_env_valid == 0) {
 			fac_set_default_env();
 	}
