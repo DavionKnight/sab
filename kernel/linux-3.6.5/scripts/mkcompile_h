@@ -7,7 +7,8 @@ PREEMPT=$4
 CC=$5
 
 #myver=v001r002
-myver=v001r003 #1.add outband port mode&statistic 2.add powerdown alarm
+#myver=v001r003 #1.add outband port mode&statistic 2.add powerdown alarm
+myver=v001r004 #1.defalut outband port is down
 
 vecho() { [ "${quiet}" = "silent_" ] || echo "$@" ; }
 
