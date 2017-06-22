@@ -29,7 +29,8 @@
 #VERSION =  v001r006 #1.run dnu modify 2.HT201E differentiate by fpga id
 #VERSION =  v001r007 #1.dual kernels support
 #VERSION =  v001r008 #1. modify default hardware version
-VERSION =  v001r009 #1. printfac error after run dnk1
+#VERSION =  v001r009 #1. printfac error after run dnk1
+VERSION =  v001r010 #1. only HT201 with ds31400 init dpll
 
 PATCHLEVEL =   
 SUBLEVEL =
