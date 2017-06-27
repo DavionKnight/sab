@@ -477,9 +477,11 @@
 #define VSC8211_ADDR	0x5
 #define CONFIG_ENV_OVERWRITE
 
+#if 0
 #define CONFIG_CMD_PCI
 #define CONFIG_PCI
 #define CONFIG_IPROC_PCIE
+#endif
 
 /*ubi part kernel1 4096,the value 4096 is in MT29F16G08CBACA flash
 when using spansion, change to 2048,and CONFIG_SYS_MALLOC to 0x100000*/
@@ -511,7 +513,8 @@ sf write 0x61000000 0x0 0x200000\0" \
 "dnk2=run CreateSystem2;tftp 0x61007fc0 saber2-ubi.fs;ubi write 0x61007fc0 kernel2 $filesize;ubifsmount kernel2;ubifsls\0" \
 "clrenv=sf probe 0;sf erase 0x200000 0x200000\0" \
 "bootargs=initrd=0x62000040,0xd60000 root=/dev/ram0 console=ttyS0,115200n8 maxcpus=1 mem=480M\0" \
-"bootcmd=ubi bootk;bootm 0x61007fc0 0x62000000\0" \   
+"bootcmd=run dnalli\0"  \
+"dnalli=tftp 0x60000000 set_env.uscr; source 0x60000000\0"    \
 "ethaddr=00:1d:80:01:03:05\0" \   
 "ipaddr=192.168.1.1\0" \   
 "serverip=192.168.1.254\0"
