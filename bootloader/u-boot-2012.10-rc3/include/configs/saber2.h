@@ -504,7 +504,7 @@ sf write 0x61000000 0x0 0x200000\0" \
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS       \
-"format=mtdparts delall;mtdparts default;saveenv;nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;nand erase.part application;ubi part application 2048;ubi create home;nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
+"format=mtdparts delall;mtdparts default;setenv bootcmd 'run bootker';saveenv;nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;nand erase.part application;ubi part application 2048;ubi create home;nand erase.part data;ubi part data 2048;ubi create data; ubi info 1\0" \
 "dnu=tftp 0x61000000 u-boot-saber2.bin;\0"\
 "CreateSystem1=nand erase.part kernel1;ubi part kernel1 2048;ubi create kernel1;ubi info 1\0"\
 "CreateSystem2=nand erase.part kernel2;ubi part kernel2 2048;ubi create kernel2;ubi info 1\0"\
@@ -514,10 +514,12 @@ sf write 0x61000000 0x0 0x200000\0" \
 "clrenv=sf probe 0;sf erase 0x200000 0x200000\0" \
 "bootargs=initrd=0x62000040,0xd60000 root=/dev/ram0 console=ttyS0,115200n8 maxcpus=1 mem=480M\0" \
 "bootcmd=run dnalli\0"  \
-"dnalli=tftp 0x60000000 set_env.uscr; source 0x60000000\0"    \
+"dnalli=run format;run dnkall;reset\0"    \
+"bootker=ubi bootk;bootm 0x61007fc0 0x62000000\0"    \
 "ethaddr=00:1d:80:01:03:05\0" \   
 "ipaddr=192.168.1.1\0" \   
 "serverip=192.168.1.254\0"
 
 
 #endif /* __SABER2_H */
+

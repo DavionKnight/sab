@@ -30,7 +30,7 @@ mkdir -p /lib/modules/$(uname -r)/
 
 #mount -t yaffs2 /dev/mtdblock5 /home/
 
-xinetd -stayalive -reuse -pidfile /var/run/xinetd.pid
+#xinetd -stayalive -reuse -pidfile /var/run/xinetd.pid
 
 /usr/sbin/telnetd -p 2650
 
@@ -64,23 +64,55 @@ ifconfig lo 127.0.0.1
 tftp_cliet_ip=192.168.1.1
 tftp_server_ip=192.168.1.254
 /sbin/ifconfig eth0  ${tftp_cliet_ip}
-if [ ! -f /home/bin/autorun.sh ]
+
+down_file_name=ipran_sys_package.tar.gz
+
+if [ ! -f /home/bin/autorun.sh ] && [ ! -f /home/bin/vtysh ]
 then
-        cd /root
-        echo "download applicaion..."
-        sleep 3
-        tftp -g -r tftp_1st.sh ${tftp_server_ip}
-        if [ ! -f tftp_1st.sh ]
-        then
-                echo "  download applicaion failure, please check tftp server"
-        else
-                /bin/chmod 777 /root/tftp_1st.sh
-                /root/tftp_1st.sh ${tftp_server_ip}
-        fi
+	cd /data/ver
+	tftp -g -r $down_file_name ${tftp_server_ip}
+
+	if [ $? -ne 0 ]
+	then 
+		echo "No package download ..."
+		exit
+	fi
+
+	mkdir tmp
+
+	tar zxvf $down_file_name -C /data/ver/tmp
+
+	cd tmp
+
+	ls *_app_* | xargs -i tar -zxvf {} -C /home/bin
+
+	if [ $? -ne 0 ]
+	then 
+		echo "package uncompressed error..."
+		cd ..
+		rm tmp -rf
+		exit
+	fi
+
+	mv * /data/ver
+
+	cd ..
+	rm tmp -rf
+
+	echo ""
+	echo "sync..."
+	sync
+	echo "  download applicaion success, reboot system..."
+	sleep 1
+	reboot
+
 else
+	if [ -f /home/bin/autorun.sh ] 
+	then
         echo "system running..."
         /bin/chmod 777 /home/bin/autorun.sh
         /bin/sh /home/bin/autorun.sh
+	fi
 fi
 
 
