@@ -413,47 +413,41 @@ static int iproc_nand_config (
 		printf ("%s, ", iproc_chip_list[i].name);
 	}
 
+	uint32_t block_count;
+	uint32_t block_mask = 0;
+	uint32_t device_mask = 0;
+	uint32_t page_mask = 0;
+	uint32_t block_addr;
+	uint32_t col_addr;
+	uint32_t oobsize;
+	int n;
+
+	uint32_t param_page[256];
+	struct nand_onfi_params *params = (struct nand_onfi_params *)param_page;
+
     reg_data = readl(IPROC_R_NAND_INIT_STATUS_ADDR);
     if (!(reg_data & IPROC_NAND_INIT_SUCCESS_BIT))
         return NAND_AUTOCONFIG_FAIL;
 
     /* Check for ONFI comaptibility */
     if (reg_data & IPROC_NAND_ONFI_INIT_BIT) {
-    
-        uint32_t block_count;
-        uint32_t block_mask = 0;
-        uint32_t device_mask = 0;
-        uint32_t page_mask = 0;
-        uint32_t block_addr;
-        uint32_t col_addr;
-        uint32_t oobsize;
-		int n;
-
-        uint32_t param_page[256];
-        struct nand_onfi_params *params = (struct nand_onfi_params *)param_page;
-
-        /* check if ONFI flash */
-        reg_data = readl(IPROC_R_NAND_ONFI_STATUS_ADDR);
-        if (!(reg_data & IPROC_NAND_ONFI_STRING_DETECTED)) {
-			/* should not be here */
-            return NAND_AUTOCONFIG_FAIL;
-		}
 	    inand[cs].onfi_status = TRUE;
-        
+		printf("ONFI:maybe S34ML08G201TF\n");
+
+		/* check if ONFI flash */
+		reg_data = readl(IPROC_R_NAND_ONFI_STATUS_ADDR);
+		if (!(reg_data & IPROC_NAND_ONFI_STRING_DETECTED)) {
+				/* should not be here */
+				return NAND_AUTOCONFIG_FAIL;
+		}
+
 		/* read the ONFI device parameters */
-        n = iproc_nand_onfi_parameter_pages(cs, (uint32_t *)param_page);
-        if (n != NAND_STATUS_OK) {
-            printf ("ONFI: failed to read parameter pages!");
-            return NAND_AUTOCONFIG_FAIL;
-        }
-        
-        /* Get device model name from ONFI */
-        if (!inand[cs].chip_ptr) {
-            char name[21];
-            memcpy(name, params->model, 20);
-            name[20] = 0;
-            printf("%s, ", name);
-        }
+		n = iproc_nand_onfi_parameter_pages(cs, (uint32_t *)param_page);
+		if (n != NAND_STATUS_OK) {
+				printf ("ONFI: failed to read parameter pages!");
+				return NAND_AUTOCONFIG_FAIL;
+		}
+
 #ifdef CONFIG_IPROC_EMULATION
         inand[cs].page_size = iproc_chip_list[i].writesize;
         inand[cs].block_size = iproc_chip_list[i].erasesize;
@@ -499,6 +493,31 @@ static int iproc_nand_config (
         col_addr = (params->addr_cycles >> 4) & 0x0f;
   #endif
 #endif            
+	}
+	else{
+	    inand[cs].onfi_status = FALSE;
+		printf("TOGGLE:maybe K9K8G08U0E\n");
+
+		memcpy(params->model,"K9K8G08U0E", sizeof("K9K8G08U0E"));
+		/* Get device model name from ONFI */
+		if (!inand[cs].chip_ptr) {
+				char name[21];
+				memcpy(name, params->model, 20);
+				name[20] = 0;
+				printf("%s, ", name);
+		}
+
+        inand[cs].page_size = 2048;
+        inand[cs].block_size = 128*1024;
+        inand[cs].device_size = 1024;
+        inand[cs].device_width = 8;
+        oobsize = 64;
+        inand[cs].spare_area_bytes = 16;
+        block_addr = 3;
+        col_addr = 2;
+	}
+    
+
 #ifdef NAND_INFO
         {
             char *cp = &inand[cs];
@@ -554,10 +573,6 @@ static int iproc_nand_config (
 
         writel(REG_CONFIG(cs), reg_data);
 
-    } else { 
-		/* Fail if not ONFI */
-        return NAND_AUTOCONFIG_FAIL;
-	}
     
 	/* Read NAND strap settings  */ 
 	reg_data = readl(IPROC_R_STRAPS_CONTROL_ADDR);
