@@ -9,7 +9,8 @@ CC=$5
 #myver=v001r002
 #myver=v001r003 #1.add outband port mode&statistic 2.add powerdown alarm
 #myver=v001r004 #1.defalut outband port is down
-myver=v001r005 #1.add auto update, by /etc/init.d/rcS
+#myver=v001r005 #1.add auto update, by /etc/init.d/rcS
+myver=v001r006 #1.add vsc8211 phy read/write interfac in /proc/iproc_eth0/eth0-phy
 
 vecho() { [ "${quiet}" = "silent_" ] || echo "$@" ; }
 
