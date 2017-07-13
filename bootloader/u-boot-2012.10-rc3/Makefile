@@ -31,7 +31,8 @@
 #VERSION =  v001r008 #1. modify default hardware version
 #VERSION =  v001r009 #1. printfac error after run dnk1
 #VERSION =  v001r010 #1. only HT201 with ds31400 init dpll
-VERSION =  v001r011 #1. add update auto
+#VERSION =  v001r011 #1. add update auto
+VERSION =  v001r012 #1. adapt to K9K8G08U0E
 
 PATCHLEVEL =   
 SUBLEVEL =
