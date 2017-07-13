@@ -2667,6 +2667,83 @@ static int set_fa_bypass(struct file *file, const char *buffer, unsigned long co
 }
 
 
+static int eth0_get_opt(char *page, char **start, off_t off, int count, int *eof, void *data)
+{
+	unsigned int len=0;
+	return len;
+}
+
+#define MAX_PROC_BUF_SIZE       256
+#define MAX_PROC_NAME_SIZE      15
+extern int phy5461_rd_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank, uint8 reg_addr, uint16 *data);
+extern int phy5461_wr_reg(uint eth_num, uint phyaddr, uint32 flags, uint16 reg_bank, uint8 reg_addr, uint16 *data);
+static int eth0_set_opt(struct file *file, const char *buffer, unsigned long count, void *data)
+{
+    int rc;
+    unsigned char kbuf[MAX_PROC_BUF_SIZE];
+    unsigned int val, rd_wr_op;
+    int addr;
+ 
+    if (count > MAX_PROC_BUF_SIZE) {
+       count = MAX_PROC_BUF_SIZE;
+    }
+ 
+    rc = copy_from_user(kbuf, buffer, count);
+ 
+    if (rc) {
+       printk (KERN_ERR "%s: copy_from_user failed status=%d", __func__, rc);
+       return -EFAULT;
+    }
+
+    rc = sscanf(kbuf, "%u %x %x", &rd_wr_op, &addr, &val);
+
+    if (rc != 3) {
+        printk(KERN_ERR "\necho args > %s", "vsc8211-debug");
+        printk(KERN_ERR "\nargs (all values should be in hex)):");
+        printk(KERN_ERR "\nrd_wr_op: 1 = read, 0 = write");
+        printk(KERN_ERR "\naddr: phy address");
+        printk(KERN_ERR "\nval: For write op: 8-bit value.\n"
+                        "     For read op: not used, may be 0\n\n"); 
+        return count;
+
+    }
+ 
+    printk("\n\nArg values :");
+    printk("\nrd_wr_op = %u", rd_wr_op);
+    printk("\naddr = 0x%X", addr);
+    printk("\nval = 0x%x", val);
+
+    if (rd_wr_op > 1) {
+        printk(KERN_ERR "\nError: Invalid rd_wr_op value %u\n\n", rd_wr_op);
+        return count;
+    }
+    
+
+    if (addr > 0x20) {
+        printk(KERN_ERR "\nError: address out of range for this device\n\n");
+        return count;
+    }
+
+    if (rd_wr_op == 0) { /* Write operation */
+			phy5461_wr_reg(0, 0x5, 0, 0, addr, &val);
+
+        msleep(1); /* Delay required, since smb(i2c) interface is slow */
+
+    }
+
+	if (rd_wr_op == 1) { /* Read operation */
+			phy5461_rd_reg(0, 0x5, 0, 0, addr, &val);
+
+			printk(KERN_ERR "\nRead .\n--------Value read at 0x%x = 0x%X\n\n",
+							addr, val);
+
+			msleep(1); /* Delay required, since smb(i2c) interface is slow */
+
+	}
+
+    return count;
+}
+
 static char* iproc_eth_proc_root="iproc_eth";
 static struct proc_dir_entry *iproc_eth_root_dir ; // BCM5892  eth proc root directory
 static int eth_mac_proc_create(struct net_device *dev )
@@ -2700,12 +2777,25 @@ static int eth_mac_proc_create(struct net_device *dev )
 
 		    ent = create_proc_entry("fa_bypass", S_IFREG|S_IRUGO, dent);
 		    if (ent) {
-			    ent->read_proc  = get_fa_bypass;
-			    ent->write_proc = set_fa_bypass;
+			    ent->read_proc  = eth0_get_opt;
+			    ent->write_proc = eth0_set_opt;
 		    } else {
 	            printk("Error creating proc_entry, returning\n");
                 return -1;
 		    }
+        }
+        if (etc->unit == 0) {
+	        printk("\nCreating eth0 proc entry\n");
+
+		    ent = create_proc_entry("eth0-phy", S_IFREG|S_IRUGO, dent);
+		    if (ent) {
+			    ent->read_proc  = eth0_get_opt;
+			    ent->write_proc = eth0_set_opt;
+		    } else {
+	            printk("Error creating proc_entry, returning\n");
+                return -1;
+		    }
+			ent->data = etc;
         }
 	}
 	ET_TRACE(("%s: exit\n", __FUNCTION__));
