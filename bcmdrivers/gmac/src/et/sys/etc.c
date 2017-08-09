@@ -37,7 +37,7 @@
 #include <bcmutils.h>
 #include <bcmnvram.h>
 #include <mach/iproc_regs.h>
-
+#include "bcmiproc_serdes.h"
 #ifdef BCMDBG
 uint32 et_msg_level = 1;
 #else
@@ -443,6 +443,8 @@ err:
 	return (error);
 }
 
+extern int linkstatus_change(int port,int speed,int status,int duplex);
+extern int gmac_speed(ch_t *ch, uint32 speed);
 /* called once per second */
 void
 etc_watchdog(etc_info_t *etc)
@@ -560,6 +562,24 @@ etc_watchdog(etc_info_t *etc)
 			etc->pm_modechange = FALSE;
 		} else {
 			et_link_up(etc->et);
+/*set mac force speed by phy speed, do not concern phy mode(auto or forced) by zhangjiajie 2017-7-14*/
+#if 1 
+			if(0 == etc->unit)
+			{
+					if(1000 == etc->speed)
+					{
+							gmac_speed(etc->ch, 5);
+							serdes_init(etc->unit, 2);
+					}
+					else
+					{
+							gmac_speed(etc->ch, 3);
+							serdes_init(etc->unit, 1);
+					}
+					linkstatus_change(0, 0, etc->linkstate, 0);
+					printk("link status change:%d,speed:%d\n",etc->linkstate,etc->speed);
+			}
+#endif
 #ifdef CONFIG_SERDES_ASYMMETRIC_MODE
 	        (*etc->chops->forcespddpx)(etc->ch);
 #endif /* CONFIG_SERDES_ASYMMETRIC_MODE */
@@ -569,10 +589,18 @@ etc_watchdog(etc_info_t *etc)
 		if (!etc->pm_modechange) {
 			et_link_down(etc->et);
 		}
+		if(0 == etc->unit)
+		{
+				linkstatus_change(0, 0, etc->linkstate, 0);
+				printk("link status change:%d,speed:%d\n",etc->linkstate,etc->speed);
+		}
 	}
 
+/*do not reconfig   by zhangjiajie 2017-7-14*/
+#if 0
 	/* keep emac txcontrol duplex bit consistent with current phy duplex */
 	(*etc->chops->duplexupd)(etc->ch);
+#endif
 
 	/* check for remote fault error */
 	if (status & STAT_REMFAULT) {

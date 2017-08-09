@@ -133,7 +133,7 @@ static void chipphyadvertise(ch_t *ch, uint phyaddr);
 static void chipphyenable(ch_t *ch, uint eth_num, uint phyaddr, int enable);
 static void chipdumpregs(ch_t *ch, gmacregs_t *regs, struct bcmstrbuf *b);
 static void gmac_mf_cleanup(ch_t *ch);
-static int gmac_speed(ch_t *ch, uint32 speed);
+int gmac_speed(ch_t *ch, uint32 speed);
 #if (defined(CONFIG_MACH_HX4) || defined(CONFIG_MACH_KT2) || defined(CONFIG_MACH_SB2))
 static void gmac_serdes_init(ch_t *ch);
 #endif
@@ -790,7 +790,7 @@ gmac_promisc(ch_t *ch, bool mode)
 	gmac_clear_reset(ch);
 }
 
-static int
+int
 gmac_speed(ch_t *ch, uint32 speed)
 {
 	uint32 cmdcfg;
@@ -1464,6 +1464,7 @@ int outband_init(ch_t *ch)
 	};
 
         printk("start to outband_init()...ver1.00\n");
+#if 0 /*mv link scan to etc_watchdog function by zhangjiajie 2017-7-14*/
         init_timer(&link_scan_timer);
    
         link_scan_timer.function = outband_phy_link_status_scan;  
@@ -1471,6 +1472,7 @@ int outband_init(ch_t *ch)
         link_scan_timer.expires = jiffies + (HZ * 1);
 	link_scan_timer.data = (unsigned long)ch;
         add_timer(&link_scan_timer);   
+#endif
         
         netlink_sock = netlink_kernel_create(&init_net, NETLINK_OUTBAND, THIS_MODULE, &cfg);
         if (!netlink_sock) {
@@ -2502,8 +2504,10 @@ etc_check_rate_limiting(etc_info_t *etc, void *pch)
 			if (((bc_pkt_count >> 10) != 0) && !(etc->rl_stopping_broadcasts)) {
 				/* 1K or more broadcast packets have arrived in 32-63 jiffies; try to throttle back the incoming packets */
 				etc->rl_stopping_broadcasts = 1;
+#if 0 /*suggest to delete by zhangjiajie 2017-7-13*/
 				printf("et%d: %s: stopping broadcasts bc_pkt_count(0x%x)\n",
 					 etc->unit, __FUNCTION__, bc_pkt_count);
+#endif
 				if (!timer_pending(&etc->rl_timer)) {
 					etc->rl_timer.expires = jiffies + HZ;
 					add_timer(&etc->rl_timer);
