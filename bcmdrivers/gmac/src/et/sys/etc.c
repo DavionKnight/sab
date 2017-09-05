@@ -569,15 +569,15 @@ etc_watchdog(etc_info_t *etc)
 					if(1000 == etc->speed)
 					{
 							gmac_speed(etc->ch, 5);
-							serdes_init(etc->unit, 2);
+					//		serdes_init(etc->unit, 2);
 					}
 					else
 					{
 							gmac_speed(etc->ch, 3);
-							serdes_init(etc->unit, 1);
+					//		serdes_init(etc->unit, 1);
 					}
 					linkstatus_change(0, 0, etc->linkstate, 0);
-					printk("link status change:%d,speed:%d\n",etc->linkstate,etc->speed);
+					printk("link status change:%d,speed:%d duplex:%d\n",etc->linkstate,etc->speed,etc->duplex);
 			}
 #endif
 #ifdef CONFIG_SERDES_ASYMMETRIC_MODE
@@ -592,7 +592,7 @@ etc_watchdog(etc_info_t *etc)
 		if(0 == etc->unit)
 		{
 				linkstatus_change(0, 0, etc->linkstate, 0);
-				printk("link status change:%d,speed:%d\n",etc->linkstate,etc->speed);
+				printk("link status change:%d,speed:%d duplex:%d\n",etc->linkstate,etc->speed,etc->duplex);
 		}
 	}
 
