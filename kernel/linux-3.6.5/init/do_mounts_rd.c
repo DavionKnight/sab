@@ -88,10 +88,14 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
 	 */
 	sys_lseek(fd, start_block * BLOCK_SIZE, 0);
 	sys_read(fd, buf, size);
+
+#if 0 /*add by zhangjiajie for ramdisk test*/
 printk("start_block:%d\n",start_block);
 for(i=0;i<size;i++)
         printk("0x%x ",*(buf+i));
     printk("\n");
+#endif
+
 	*decompressor = decompress_method(buf, size, &compress_name);
 	if (compress_name) {
 		printk(KERN_NOTICE "RAMDISK: %s image found at block %d\n",
