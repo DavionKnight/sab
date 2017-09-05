@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 
 			strcpy ( ifr.ifr_name, "eth0");
 
+			setval[0] = addr;
 			ifr.ifr_data = ( void * ) setval;
 			error = ioctl (sockfd, SIOCGETCPHYRD, &ifr);
 			if ( error < 0 )
