@@ -96,6 +96,11 @@ enum IPC_TYPE
    IPC_TYPE_OFP,    /* openflow 消息 */
    IPC_TYPE_ELPS,   /* ELPS 消息 */
    IPC_TYPE_BGP,    /* BGP消息 */
+   IPC_TYPE_HA,     /* HA 消息 */  
+   IPC_TYPE_MSTP,	/* MSTP 消息 */ 
+   IPC_TYPE_SFP,    /* SFP消息 */
+   IPC_TYPE_IPMC,  /*IPMC message*/
+   IPC_TYPE_MPLSAPS,/* mpls aps*/
    IPC_TYPE_MAX = 255
 };
 
@@ -116,6 +121,102 @@ struct ipc_msghdr
 	uint32_t   msg_index;  /* maybe ifindex、lsp_index、pw_index and so on */
 };
 
+	const char *mod[] = {
+		"MODULE_ID_INVALID",
+		"MODULE_ID_IFM",
+		"MODULE_ID_DEVM",
+		"MODULE_ID_VTY",
+		"MODULE_ID_MPLS",
+		"MODULE_ID_FTM",
+		"MODULE_ID_HAL",
+		"MODULE_ID_HSL",
+		"MODULE_ID_QOS",
+		"MODULE_ID_OSPF",
+		"MODULE_ID_ISIS",
+		"MODULE_ID_RIP",
+		"MODULE_ID_BGP",
+		"MODULE_ID_ROUTE",
+		"MODULE_ID_ARP",
+		"MODULE_ID_LDP",
+		"MODULE_ID_RSVPTE",
+		"MODULE_ID_VRRP",
+		"MODULE_ID_DHCP",
+		"MODULE_ID_LACP",
+		"MODULE_ID_L2",
+		"MODULE_ID_SYSLOG",
+		"MODULE_ID_FILE",
+		"MODULE_ID_PING",
+		"MODULE_ID_CES",
+		"MODULE_ID_AAA",
+		"MODULE_ID_SYSTEM",
+		"MODULE_ID_BFD",
+		"MODULE_ID_ALARM",
+		"MODULE_ID_NTP", 
+		"MODULE_ID_SNMPD",
+		"MODULE_ID_SNMPD_CLI",
+		"MODULE_ID_SNMPD_PDU_2_CLI",
+		"MODULE_ID_WEB",       
+		"MODULE_ID_OPENFLOW",
+		"MODULE_ID_NETCONF", 
+		"MODULE_ID_IPMC",  /* 组播 */
+		"MODULE_ID_CLOCK",   /* 时钟 */
+		"MODULE_ID_HA",      /* HA 模块 */
+		"MODULE_ID_OSPF6",   
+		"MODULE_ID_DHCPV6",   /* DHCPV6 模块*/
+	};
+	const char *ipctype[] = {
+		"IPC_TYPE_INVALID",
+		"IPC_TYPE_LSP",    /* mpls lsp */
+		"IPC_TYPE_ILM",    /* mpls ilm */
+		"IPC_TYPE_NHLFE",  /* mpls nhlfe */
+		"IPC_TYPE_PW",     /* mpls pw */
+		"IPC_TYPE_VSI",    /* mpls vsi */
+		"IPC_TYPE_MPLSOAM",/* mpls oam*/
+		"IPC_TYPE_ROUTE",  /* ip 路由 */
+		"IPC_TYPE_FIB",    /* ip fib */
+		"IPC_TYPE_NHP",    /* ip nhp */
+		"IPC_TYPE_L3IF",   /* ip l3if */
+		"IPC_TYPE_ARP",    /* arp 全局信息*/
+		"IPC_TYPE_ARPIF",  /* arp 接口信息 */
+		"IPC_TYPE_IFM",    /* 接口管理 */
+		"IPC_TYPE_FTM",    /* 软转发 */
+		"IPC_TYPE_VLAN",   /* vlan */
+		"IPC_TYPE_L2IF",   /* l2if */
+		"IPC_TYPE_MPLSIF", /* mpls if */
+		"IPC_TYPE_DEVM",   /* 设备管理*/
+		"IPC_TYPE_CES",    /* ces */
+		"IPC_TYPE_ACL",    /* qos acl */
+		"IPC_TYPE_CAR",
+		"IPC_TYPE_QOS",    /* QOS 全局信息 */
+		"IPC_TYPE_HQOS"
+		"IPC_TYPE_QOSIF",  /* QOS 接口配置 */
+		"IPC_TYPE_CFM",    /* CFM 消息 */
+		"IPC_TYPE_PROTO",  /* 协议注册*/
+		"IPC_TYPE_PACKET", /* 转发报文 */
+		"IPC_TYPE_VTY",    /* VTY 消息 */
+		"IPC_TYPE_SYSLOG", /* syslog 消息 */
+		"IPC_TYPE_AAA",    /* AAA 消息 */
+		"IPC_TYPE_BFD",    /* BFD 消息 */
+		"IPC_TYPE_TRUNK",  /* trunk */
+		"IPC_TYPE_MAC",    /* mac 地址消息 */
+		"IPC_TYPE_SYNCE",  /* syce 消息 */
+		"IPC_TYPE_TUNNEL", /* tunnel 消息 */
+		"IPC_TYPE_ALARM",
+		"IPC_TYPE_FILE",
+		"IPC_TYPE_SNMP",
+		"IPC_TYPE_SLA",
+		"IPC_TYPE_OSPF",	/* OSPF 消息 */
+		"IPC_TYPE_RIP",	/* RIP 消息 */
+		"IPC_TYPE_ISIS",	/* ISIS 消息 */
+		"IPC_TYPE_OFP",    /* openflow 消息 */
+		"IPC_TYPE_ELPS",   /* ELPS 消息 */
+		"IPC_TYPE_BGP",    /* BGP 消息 */   
+		"IPC_TYPE_HA",     /* HA 消息 */  
+		"IPC_TYPE_MSTP",	/* MSTP 消息 */ 
+		"IPC_TYPE_SFP",    /* SFP消息 */
+		"IPC_TYPE_IPMC",  /*IPMC message*/
+		"IPC_TYPE_MPLSAPS",/* mpls aps*/
+		"IPC_TYPE_MAX"};
 
 #define IPC_HEADER_LEN    24      /* IPC 消息头长度 */
 #define IPC_QUEUE_LEN     1000    /* IPC 队列长度 */
@@ -167,83 +268,16 @@ int main(int argc, char *argv[])
 	struct ipc_pkt mesg;
 	int id=0;
 
-	const char *mod[] = {
-		"MODULE_ID_INVALID",
-		"MODULE_ID_IFM",
-		"MODULE_ID_DEVM",
-		"MODULE_ID_VTY",
-		"MODULE_ID_MPLS",
-		"MODULE_ID_FTM",
-		"MODULE_ID_HAL",
-		"MODULE_ID_HSL",
-		"MODULE_ID_QOS",
-		"MODULE_ID_OSPF",
-		"MODULE_ID_ISIS",
-		"MODULE_ID_RIP",
-		"MODULE_ID_BGP",
-		"MODULE_ID_ROUTE",
-		"MODULE_ID_ARP",
-		"MODULE_ID_LDP",
-		"MODULE_ID_RSVPTE",
-		"MODULE_ID_VRRP",
-		"MODULE_ID_DHCP",
-		"MODULE_ID_LACP",
-		"MODULE_ID_L2",
-		"MODULE_ID_SYSLOG",
-		"MODULE_ID_FILE",
-		"MODULE_ID_PING",
-		"MODULE_ID_CES",
-		"MODULE_ID_AAA",
-		"MODULE_ID_SYSTEM",
-		"MODULE_ID_BFD"};
-	const char *ipctype[] = {
-		"IPC_TYPE_INVALID",
-		"IPC_TYPE_LSP",    /* mpls lsp */
-		"IPC_TYPE_ILM",    /* mpls ilm */
-		"IPC_TYPE_NHLFE",  /* mpls nhlfe */
-		"IPC_TYPE_PW",     /* mpls pw */
-		"IPC_TYPE_VSI",    /* mpls vsi */
-		"IPC_TYPE_MPLSOAM",/* mpls oam*/
-		"IPC_TYPE_ROUTE",  /* ip 路由 */
-		"IPC_TYPE_FIB",    /* ip fib */
-		"IPC_TYPE_NHP",    /* ip nhp */
-		"IPC_TYPE_L3IF",   /* ip l3if */
-		"IPC_TYPE_ARP",    /* arp 全局信息*/
-		"IPC_TYPE_ARPIF",  /* arp 接口信息 */
-		"IPC_TYPE_IFM",    /* 接口管理 */
-		"IPC_TYPE_FTM",    /* 软转发 */
-		"IPC_TYPE_VLAN",   /* vlan */
-		"IPC_TYPE_L2IF",   /* l2if */
-		"IPC_TYPE_MPLSIF", /* mpls if */
-		"IPC_TYPE_DEVM",   /* 设备管理*/
-		"IPC_TYPE_CES",    /* ces */
-		"IPC_TYPE_ACL",    /* qos acl */
-		"IPC_TYPE_CAR",
-		"IPC_TYPE_QOS",    /* QOS 全局信息 */
-		"IPC_TYPE_HQOS"
-		"IPC_TYPE_QOSIF",  /* QOS 接口配置 */
-		"IPC_TYPE_CFM",    /* CFM 消息 */
-		"IPC_TYPE_PROTO",  /* 协议注册*/
-		"IPC_TYPE_PACKET", /* 转发报文 */
-		"IPC_TYPE_VTY",    /* VTY 消息 */
-		"IPC_TYPE_SYSLOG", /* syslog 消息 */
-		"IPC_TYPE_AAA",    /* AAA 消息 */
-		"IPC_TYPE_BFD",    /* BFD 消息 */
-		"IPC_TYPE_TRUNK",  /* trunk */
-		"IPC_TYPE_MAC",    /* mac 地址消息 */
-		"IPC_TYPE_SYNCE",  /* syce 消息 */
-		"IPC_TYPE_TUNNEL", /* tunnel 消息 */
-		"IPC_TYPE_ALARM",
-		"IPC_TYPE_FILE",
-		"IPC_TYPE_SNMP",
-		"IPC_TYPE_SLA",
-		"IPC_TYPE_MAX"};
 
-	if(argc<2)
+	if(argc!=2)
+	{
+	//	help();
+		printf("getmsg [keyid]\n");
 		return 0;
+	}
 
 	queue = (unsigned int)atoi(argv[1]);
-	printf("queue id=%d\n",queue);
+//	printf("queue id=%d\n",queue);
 	id = ipc_connect(queue);
 
 	if (id < 0)
@@ -252,7 +286,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	printf("key = %d, msqid = 0x%x\n", queue, id);
+	printf("key = %d, msqid = 0x%x(%d)\n", queue, id,id);
 
 	/* 读一次队列内容 */
 	memset(&mesg, 0, sizeof(struct ipc_pkt));
@@ -261,43 +295,59 @@ int main(int argc, char *argv[])
 		printf ("Read fail! \n");
 		return 0;
 	}
-	if(mesg.msghdr.msg_type < sizeof(ipctype)/sizeof(char *))
-	{
-		printf( "IPC_TYPE = %s\n", ipctype[mesg.msghdr.msg_type]);
-	}
-	else
-	{
-		printf( "IPC_TYPE = %d\n", mesg.msghdr.msg_type);
-	}
-	if(mesg.msghdr.sender_id < sizeof(mod)/sizeof(char *))
-	{
-		printf( "sender_id = %s\n", mod[mesg.msghdr.sender_id]);
-	}
-	else
-	{
-		printf( "sender_id = %d\n", mesg.msghdr.sender_id);
-	}
-
 	if((unsigned)mesg.msghdr.module_id < sizeof(mod)/sizeof(char *))
 	{
-		printf( "module_id = %s\n", mod[mesg.msghdr.module_id]);
+		printf( "module_id = %d (%s)\n",mesg.msghdr.module_id, mod[mesg.msghdr.module_id]);
 	}
 	else
 	{
 		printf( "module_id = %d\n", mesg.msghdr.module_id);
 	}
 
-	printf( "subtype = %d\n", mesg.msghdr.msg_subtype);
-	printf( "opcode = %d\n", mesg.msghdr.opcode);
-	printf( "data_len = %d\n", mesg.msghdr.data_len);
+	if(mesg.msghdr.sender_id < sizeof(mod)/sizeof(char *))
+	{
+		printf( "sender_id = %d (%s)\n",mesg.msghdr.sender_id, mod[mesg.msghdr.sender_id]);
+	}
+	else
+	{
+		printf( "sender_id = %d\n", mesg.msghdr.sender_id);
+	}
+
+	if(mesg.msghdr.msg_type < sizeof(ipctype)/sizeof(char *))
+	{
+		printf("IPC_TYPE = %d (%s)\n",mesg.msghdr.msg_type,ipctype[mesg.msghdr.msg_type]);
+	}
+	else
+	{
+		printf( "IPC_TYPE = %d\n", mesg.msghdr.msg_type);
+	}
+
+
+	printf( "data_len = 0x%x(%d)\n", mesg.msghdr.data_len,mesg.msghdr.data_len);
+	printf( "subtype  = 0x%x(%d)\n", mesg.msghdr.msg_subtype,mesg.msghdr.msg_subtype);
+	printf( "opcode   = 0x%x(%d)\n", mesg.msghdr.opcode,mesg.msghdr.opcode);
+	printf( "data_num = 0x%x(%d)\n", mesg.msghdr.data_num,mesg.msghdr.data_num);
+	printf( "priority = 0x%x(%d)\n", mesg.msghdr.priority,mesg.msghdr.priority);
+	printf( "unit     = 0x%x(%d)\n", mesg.msghdr.unit,mesg.msghdr.unit);
+	printf( "slot     = 0x%x(%d)\n", mesg.msghdr.slot,mesg.msghdr.slot);
+	printf( "sequence = 0x%x(%d)\n", mesg.msghdr.sequence,mesg.msghdr.sequence);
+	printf( "msg_index= 0x%x(%d)\n", mesg.msghdr.msg_index,mesg.msghdr.msg_index);
 	
 	int i=0;
 	unsigned char *p=(unsigned char *)&mesg;
-	for(i;i<sizeof(mesg);i++)
+	for(i;i<(sizeof(struct ipc_msghdr)+mesg.msghdr.data_len);i++)
 	{
-		if(i%15==0)
+		if(i==sizeof(struct ipc_msghdr))
+		{
+			printf("\ndata:\n");
+			printf("#%03d: ",i);
+		}
+		if(i%16==0)
+		{
 			printf("\n");
-		printf(" 0x%x",p[i]);
+			printf("#%03d: ",i);
+		}
+		printf(" 0x%02x",p[i]);
 	}
 			printf("\n");
 
