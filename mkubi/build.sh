@@ -14,7 +14,12 @@ mkimage -A arm -O linux -T kernel -n Image -a 0x61008000 -C none -d ./Image ./bi
 read -p "Input kernel version:" KVER
 ./padmd5 bin/uImage $KVER 201 201
 
-mkfs.ubifs -r ./bin -m 2048 -e 126976  -c  6979 -o saber2-ubi.fs 
+cp ../ramdisk/rootfs-ht201 ./bin/rootfs
+mkfs.ubifs -r ./bin -m 2048 -e 126976  -c  6979 -o ht201_main_kernel 
 
-cp saber2-ubi.fs /tftpboot/saber2-ubi.fs
+cp ../ramdisk/rootfs-ht201e ./bin/rootfs
+mkfs.ubifs -r ./bin -m 2048 -e 126976  -c  6979 -o ht201e_main_kernel 
+
+cp ht201e_main_kernel  /tftpboot/
+cp ht201_main_kernel  /tftpboot/
 

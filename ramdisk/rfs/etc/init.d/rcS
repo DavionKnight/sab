@@ -65,7 +65,7 @@ tftp_cliet_ip=192.168.1.1
 tftp_server_ip=192.168.1.254
 /sbin/ifconfig eth0  ${tftp_cliet_ip}
 
-down_file_name=ipran_sys_package.tar.gz
+down_file_name=ht201e_sys
 
 if [ ! -f /home/bin/autorun.sh ] && [ ! -f /home/bin/vtysh ]
 then

@@ -538,7 +538,7 @@ restart:
 				sprintf(buf, "%lX", (unsigned long)load_addr);
 				setenv("fileaddr", buf);
 
-				if(strncmp(tftp_filename, "u-boot", 6) == 0)
+				if(strncmp(tftp_filename, "ht201e_main_uboot", 16) == 0)
 				{
 					char *argv1[12];
 					argv1[0] = "sf";

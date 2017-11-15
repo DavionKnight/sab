@@ -30,7 +30,7 @@ ramdisk: make_tmp FORCE
 	sudo cp -dpR $(ROOTFS_DIR)/* $(TMPDIR)
 #	sudo cp extfiles/demo $(TMPDIR)
 #	sudo cp extfiles/fpga $(TMPDIR)
-#	sudo cp extfiles/wdt.ko $(TMPDIR)/usr/bin/
+	sudo cp extfiles/getmsg $(TMPDIR)/usr/bin/
 #	sudo cp extfiles/wdt-1cpu.ko $(TMPDIR)/usr/bin/
 	sudo umount $(TMPDIR)
 
