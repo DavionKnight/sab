@@ -58,7 +58,7 @@ int dram_init (void)
 	ethHw_serdesEarlyInit(0);
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 #if !defined(CONFIG_SRAM_RELOC) && !defined(CONFIG_KATANA2_EMULATION)
-	ddr_init2();
+	/*ddr_init2();*/
 #endif
 #endif
 	sku_id = (reg32_read((volatile uint32_t *)CMIC_DEV_REV_ID)) & 0x0000ffff;
@@ -103,7 +103,7 @@ int board_late_init (void)
 
 #if defined(CONFIG_RUN_DDR_SHMOO2) && defined(CONFIG_SHMOO_REUSE)
 	/* Save DDR PHY parameters into flash if Shmoo was performed */
-	iproc_save_shmoo_values();
+/*	iproc_save_shmoo_values();*/
 #endif
 
 #ifndef CONFIG_KATANA2_EMULATION
