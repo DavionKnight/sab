@@ -708,13 +708,15 @@ static char *failed = "*** failed ***\n";
 extern int post_check_board_cfg_env( void );
 void board_init_r(gd_t *id, ulong dest_addr)
 {
+	
 	ulong malloc_start;
 #if !defined(CONFIG_SYS_NO_FLASH)
 	ulong flash_size;
 	volatile int *nor_enable;
 #endif
 	gd = id;
-
+	int i=0,j=0,k=0;
+	printf("board_init_r monitor \n");
 	gd->flags |= GD_FLG_RELOC;	/* tell others: relocation done */
 	bootstage_mark_name(BOOTSTAGE_ID_START_UBOOT_R, "board_init_r");
 

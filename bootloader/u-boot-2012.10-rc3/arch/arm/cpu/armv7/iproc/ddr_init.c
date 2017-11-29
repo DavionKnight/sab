@@ -1826,7 +1826,7 @@ void ddr_init2(void)
 	}
 #if (defined(CONFIG_HELIX4) || defined(CONFIG_KATANA2))
 	/* mhz = 0x190, 32 bit bus, 16 bit chip width, 1.35v vddq, 8Gb chip size, jedec type = 25 (DDR3-1866M) */
-	reg32_write((volatile uint32_t *)DDR_PHY_CONTROL_REGS_STRAP_CONTROL, 0x0190c4f3);
+	reg32_write((volatile uint32_t *)DDR_PHY_CONTROL_REGS_STRAP_CONTROL, 0x0190c433);
 	val = reg32_read((volatile uint32_t *)DDR_PHY_CONTROL_REGS_REVISION);
 
 	/* ECC =1, DRAM type = 1 i.e DDR3, AL = 3, write recovery = 0, write latency = 9, CAS read latency = 13 */
