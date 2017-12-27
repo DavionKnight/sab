@@ -395,6 +395,7 @@
 	"Hardware_Version=A.01\0" \
 	"1st_MAC=00:1D:80:01:02:03\0" \
 	"Date_of_Production=06.01.2016\0" \
+	"OemName=\0" \
 	"HwCfg=0xfe040400\0" 
 
 #endif /* !CONFIG_IPROC_MIN_FEATURES */

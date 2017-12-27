@@ -18,7 +18,7 @@ arm-linux-gcc dpllupdate.c -o dpllupdate -lspidrv -L ./
 #cp libspidrv.so /tftpboot
 #cp fpga /tftpboot
 #cp dpll /tftpboot
-#cp epcs /tftpboot
+cp epcs /tftpboot
 #cp eeprom /tftpboot
 
 

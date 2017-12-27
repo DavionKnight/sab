@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
 				
 				return -1;
 			}
+#if 0
 				printf("buf: \n");
 				for(i = 0; i < len; ++i)
 				{
@@ -201,6 +202,7 @@ int main(int argc, char *argv[])
 					printf("0x%x ", data[i]);
 				}
 				printf("\n");
+#endif
 				
 			faddr += len;//BLOCK_SIZE;
 			//pkt++;
