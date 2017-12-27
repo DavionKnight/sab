@@ -7,8 +7,8 @@ echo
 #echo
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export LD_LIBRARY_PATH=/lib:/usr/lib
+ulimit -c 10240
 
-/bin/hostname Huahuan
 USER="'id -un'"
 LOGNAME=$USER
 HOSTNAME='/bin/hostname'

@@ -23,27 +23,41 @@ make_tmp:FORCE
 	if [ ! -d $(TMPDIR) ]; then mkdir $(TMPDIR); fi
 
 ramdisk: make_tmp FORCE
-	dd if=/dev/zero of=ramdisk bs=$(BLOCK_SIZE) count=$(COUNT)
-	sudo $(MKFS) -m 0 -F -N 5000  -b 4096 ./ramdisk
-#	-sudo umount $(TMPDIR)
-	sudo mount -t $(FS) -o loop ./ramdisk $(TMPDIR)
+	dd if=/dev/zero of=ramdisk1 bs=$(BLOCK_SIZE) count=$(COUNT)
+	dd if=/dev/zero of=ramdisk2 bs=$(BLOCK_SIZE) count=$(COUNT)
+	sudo $(MKFS) -m 0 -F -N 5000  -b 4096 ./ramdisk1
+	sudo $(MKFS) -m 0 -F -N 5000  -b 4096 ./ramdisk2
+	sudo mount -t $(FS) -o loop ./ramdisk1 $(TMPDIR)
 	sudo cp -dpR $(ROOTFS_DIR)/* $(TMPDIR)
-#	sudo cp extfiles/demo $(TMPDIR)
-#	sudo cp extfiles/fpga $(TMPDIR)
 	sudo cp extfiles/getmsg $(TMPDIR)/usr/bin/
-#	sudo cp extfiles/wdt-1cpu.ko $(TMPDIR)/usr/bin/
+	sudo sed -i 's/sys_pkg/ht201_sys/g' $(TMPDIR)/etc/init.d/rcS
+	sleep 1
 	sudo umount $(TMPDIR)
+	sleep 1
+	sudo mount -t $(FS) -o loop ./ramdisk2 $(TMPDIR)
+	sudo cp -dpR $(ROOTFS_DIR)/* $(TMPDIR)
+	sudo cp extfiles/getmsg $(TMPDIR)/usr/bin/
+	sudo sed -i 's/sys_pkg/ht201e_sys/g' $(TMPDIR)/etc/init.d/rcS
+	sleep 1
+	sudo umount $(TMPDIR)
+	sleep 1
 
 
 ramdisk.gz: ramdisk FORCE
-	gzip -f9 ramdisk
+	gzip -f9 ramdisk1
+	gzip -f9 ramdisk2
 
 rootfs: ramdisk.gz
 	$(MKIMAGE) \
  -A arm -O linux -T ramdisk -C gzip  \
  -n "Linux ramdisk" \
- -d $< $@	
-#	cp  $@ ../1604C/rootfs
+ -d ramdisk1.gz  $@	
+	cp  $@ rootfs-ht201
+	$(MKIMAGE) \
+ -A arm -O linux -T ramdisk -C gzip  \
+ -n "Linux ramdisk" \
+ -d ramdisk2.gz  $@	
+	cp  $@ rootfs-ht201e
 
 uramdisk: ramdisk
 	$(MKIMAGE) \

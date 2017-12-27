@@ -13,7 +13,9 @@ CC=$5
 #myver=v001r006 #1.add vsc8211 phy read/write interfac in /proc/iproc_eth0/eth0-phy
 #myver=v001r007 #1.delete broadcast printf
 #myver=v001r008 #1.NM port up/down frequently 2.add vitess phy api to read register
-myver=v001r009 #1.rename all the image names eg. replace saber2-ubi.fs to ht201_main_kernel
+#myver=v001r009 #1.rename all the image names eg. replace saber2-ubi.fs to ht201_main_kernel
+#myver=v001r011 #1.add core dump
+myver=v001r012 #1.rm ipv6  2.modify hostname:Huahuan to localhost 3.update ramdisk Makefile
 
 vecho() { [ "${quiet}" = "silent_" ] || echo "$@" ; }
 
