@@ -56,6 +56,11 @@
 #include <asm/io.h>
 #include <asm/unistd.h>
 
+#define WDT_REBOOT /*add by zhangjiajie 2017-12-28*/
+#ifdef WDT_REBOOT
+#include <asm-generic/gpio.h>
+#endif
+
 #ifndef SET_UNALIGN_CTL
 # define SET_UNALIGN_CTL(a,b)	(-EINVAL)
 #endif
@@ -357,6 +362,17 @@ int unregister_reboot_notifier(struct notifier_block *nb)
 }
 EXPORT_SYMBOL(unregister_reboot_notifier);
 
+
+#ifdef WDT_REBOOT
+void reboot_system_by_wdt()
+{
+	if(gpio_request(9, "wdi"))
+		printk("wdi gpio9 request failed\n");
+	printk("watch dog reboot ...\n");
+	gpio_direction_input(9);
+	return;
+}
+#endif
 /**
  *	kernel_restart - reboot the system
  *	@cmd: pointer to buffer containing command to execute for restart
@@ -374,6 +390,9 @@ void kernel_restart(char *cmd)
 	else
 		printk(KERN_EMERG "Restarting system with command '%s'.\n", cmd);
 	kmsg_dump(KMSG_DUMP_RESTART);
+#ifdef WDT_REBOOT
+	reboot_system_by_wdt();
+#endif
 	machine_restart(cmd);
 }
 EXPORT_SYMBOL_GPL(kernel_restart);
@@ -464,6 +483,7 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 		cmd = LINUX_REBOOT_CMD_HALT;
 
 	mutex_lock(&reboot_mutex);
+	printk("syscall reboot 0x%x\n",cmd);
 	switch (cmd) {
 	case LINUX_REBOOT_CMD_RESTART:
 		kernel_restart(NULL);
