@@ -205,6 +205,8 @@ int fac_env_check(void)
 	}
 	if (gd->fac_env_valid == 0) {
 			fac_set_default_env();
+			printf("ecc error,wait fpga reset cpu\n");
+			mdelay(5000);
 	}
 	else {
 		fac_env_relocate_spec ();
@@ -217,32 +219,32 @@ int fac_env_check(void)
 		char *eth0mac;
 
 	    /* set serial# ethaddr and MacExt if not yet defined */
-	    pvalue = getfacenv("Serial#");
+	    pvalue = getfacenv("serial#");
 	    if (pvalue == NULL) {
-	        puts ("*** Error - Serial No. is not set in factory setting \n\n");
+	        puts ("*** Error - serial No. is not set in factory setting \n\n");
 	    }
 	    
-	    pvalue = getfacenv("1st_MAC");
+	    pvalue = getfacenv("1st_mac");
 	    if (pvalue != NULL && pvalue[9] != 'X') {
 			eth0mac = getenv("ethaddr");	
 			if(strncmp(eth0mac, pvalue, 17))
 			{
 	        	setenv ("ethaddr", pvalue);
-				puts("ethaddr update form factory info,saveenv\n");
+				puts("ethaddr update form factory info\n");
 				saveenv();
 			}
 	    } else {
-	    	puts ("*** Error - MacAddress is not set in factory setting \n\n");
+	    	puts ("*** Error - macaddress is not set in factory setting \n\n");
 	    }
 
-	    pvalue = getfacenv("Hardware_Version");
+	    pvalue = getfacenv("hardware_version");
 	    if (pvalue == NULL) {
-	        puts ("*** Error - Hardware_Version. is not set in factory setting \n\n");
+	        puts ("*** Error - hardware_version. is not set in factory setting \n\n");
 	    }
 
-	    pvalue = getfacenv("HwCfg");
+	    pvalue = getfacenv("hwcfg");
 	    if (pvalue == NULL) {
-	        puts ("*** Error - HwCfg. is not set in factory setting \n\n");
+	        puts ("*** Error - hwcfg. is not set in factory setting \n\n");
 	    }
 	}
 

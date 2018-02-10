@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 	printf( "sequence = 0x%x(%d)\n", mesg.msghdr.sequence,mesg.msghdr.sequence);
 	printf( "msg_index= 0x%x(%d)\n", mesg.msghdr.msg_index,mesg.msghdr.msg_index);
 	
-	int i=0;
+	int i=0,flag=0;
 	unsigned char *p=(unsigned char *)&mesg;
 	for(i;i<(sizeof(struct ipc_msghdr)+mesg.msghdr.data_len);i++)
 	{
@@ -341,13 +341,18 @@ int main(int argc, char *argv[])
 		{
 			printf("\ndata:\n");
 			printf("#%03d: ",i);
+			flag = 1;
 		}
 		if(i%16==0)
 		{
 			printf("\n");
 			printf("#%03d: ",i);
 		}
-		printf(" 0x%02x",p[i]);
+		if(!flag)
+			printf(" 0x%02x",p[i]);
+		else
+			printf(" %c:0x%02x",p[i],p[i]);
+
 	}
 			printf("\n");
 

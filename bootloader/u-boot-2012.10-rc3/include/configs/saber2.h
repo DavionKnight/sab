@@ -389,14 +389,14 @@
 #define CONFIG_SYS_I2C_EEPROM_ADDR	0x56
 
 #define	CONFIG_DEFAULT_FACTORY_ENV					\
-	"Vendor=HuaHuan\0"	\
-	"Serial#=99999\0" \
-	"Device=HT201\0" \
-	"Hardware_Version=A.01\0" \
-	"1st_MAC=00:1D:80:01:02:03\0" \
-	"Date_of_Production=06.01.2016\0" \
-	"OemName=\0" \
-	"HwCfg=0xfe040400\0" 
+	"vendor=HuaHuan\0"	\
+	"serial#=99999\0" \
+	"device=HT201\0" \
+	"hardware_version=A.01\0" \
+	"1st_mac=00:1D:80:01:02:03\0" \
+	"date_of_production=06.01.2016\0" \
+	"oemname=\0" \
+	"hwcfg=0xfe040400\0" 
 
 #endif /* !CONFIG_IPROC_MIN_FEATURES */
 

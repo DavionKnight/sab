@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	int count = 0,flag=0; 
 	unsigned int addr = 0;
 	unsigned int chip = 0;
-	unsigned char data[32] = {0};
+	unsigned char data[300] = {0};
 	int chip_select = 0;
 
 	int fd;
@@ -58,6 +58,30 @@ int main(int argc, char *argv[])
 
 	value = i2cdrv_init(virt_addr);
 
+	printf("argc=%d\n",argc);
+	if (argc == 3 && argv[1][0] == 'f') 
+	{
+		FILE *f;
+		chip = 0x56;
+		addr = 0;
+		count= 256;
+		
+		printf("reading all eeprom\n");
+		value = eeprom_read(chip,addr,data,count);
+		printf("------eeprom_read finished!!!------\n");
+		if(value)
+			printf("fpga_spi_read failed!\n");		
+		printf("read %d bytes at 0x%04x:", count, (unsigned short)addr);
+		for (i = 0 ; i < count ; i++)
+			printf(" %02x",data[i]);
+		printf(" done\n");	
+		f = fopen("./eep_file","wb");
+		if(!f)
+			printf("open file err\n");
+		fwrite(data, 1, 256, f);
+		fclose(f);
+		
+	}
 	if (argc == 6 && argv[1][0] == 'r') 
 	{
 		sscanf(argv[3], "%d", &chip);
